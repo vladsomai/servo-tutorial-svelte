@@ -1,11 +1,10 @@
 <script lang="ts">
 </script>
 
-<svelte:head>
-	<title>Home</title>
-	<meta name="description" content="Gearotons Home page" />
-</svelte:head>
+<button class="btn btn-primary">Click</button>
+<button class="btn btn-secondary">Click</button>
+<button class="btn btn-error">Click</button>
 
-<section>
+<section class="h-screen bg-red-300">
 	<h1>Welcome</h1>
 </section>
