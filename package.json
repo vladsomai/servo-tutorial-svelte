@@ -39,6 +39,8 @@
 		"vite-plugin-devtools-json": "^1.0.0"
 	},
 	"dependencies": {
+		"babylonjs": "^8.23.1",
+		"babylonjs-loaders": "^8.23.1",
 		"daisyui": "^5.0.50"
 	}
 }
