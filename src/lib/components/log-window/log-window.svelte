@@ -39,7 +39,7 @@
 		</div>
 	</div>
 
-	<div class="h-[500px] overflow-auto border-2 py-3" id="log-content-container">
+	<div class="h-[90%] overflow-auto py-3" id="log-content-container">
 		{#each LogWindowLogs.Logs as Log, i}
 			<div class="flex w-full">
 				<p class="line-number w-[30px] ml-1 text-sm">
@@ -59,7 +59,7 @@
 
 {#snippet LogWIndowButton(btnName: string, className: string, onClick: Function)}
 	<button
-		class={`${className} btn btn-sm rounded-t-2xl `}
+		class={`${className} btn btn-sm rounded-t-2xl rounded-b-none`}
 		onclick={() => {
 			onClick();
 		}}
