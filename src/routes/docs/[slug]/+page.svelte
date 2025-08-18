@@ -1,5 +1,7 @@
 <script lang="ts">
+	import type { MotorCommandType } from '$lib/client-server-lib/types';
 	import CommandMenu from '$lib/components/command-menu.svelte';
+	import Command from '$lib/components/commands/command.svelte';
 	import LogWindow from '$lib/components/log-window/log-window.svelte';
 
 	let { data } = $props();
@@ -10,7 +12,7 @@
 		<CommandMenu MotorCommands={data.MotorCommands} />
 	</section>
 	<section class="bg-base-300 mx-2 h-[98vh] w-5/12 overflow-auto rounded-2xl 2xl:w-[45%]">
-		<h1>Command {data.CommandId}</h1>
+		<Command {data} />
 	</section>
 	<section
 		id="parent-log-window"

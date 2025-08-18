@@ -1,4 +1,4 @@
-export type MotorCommandsDictionary = {
+export type MotorCommandType = {
     CommandString: string, //Command name
     CommandEnum: number, //Command id
     Description: string,
@@ -11,21 +11,18 @@ export interface InputOutputObjects {
     TooltipDisplayFormat?: string
 }
 
-export const NonCommands = new Map(
-    [["Commands protocol", 1001], ["Tutorial", 1002]]);
-
-export const CommandsProtocolChapter = {
-    "CommandString": "Commands protocol",
-    "CommandEnum": NonCommands.get("Commands protocol"),
-    "Description": "",
-    "Input": "",
-    "Output": ""
+export const CommandsProtocolChapter: MotorCommandType = {
+    CommandString: "Commands protocol",
+    CommandEnum: 1001,
+    Description: "",
+    Input: "",
+    Output: ""
 }
 
-export const QuickStartChapter = {
-    "CommandString": "Quick start",
-    "CommandEnum": NonCommands.get("Tutorial"),
-    "Description": "",
-    "Input": "",
-    "Output": ""
+export const QuickStartChapter: MotorCommandType = {
+    CommandString: "Quick start",
+    CommandEnum: 1002,
+    Description: "",
+    Input: "",
+    Output: ""
 }

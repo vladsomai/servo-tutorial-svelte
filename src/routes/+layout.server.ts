@@ -1,13 +1,13 @@
 import { SupportedCookies, SupportedCookiesMap } from '$lib/client-server-lib/cookies';
-import { CommandsProtocolChapter, QuickStartChapter, type MotorCommandsDictionary } from '$lib/client-server-lib/types';
+import { CommandsProtocolChapter, QuickStartChapter, type MotorCommandType } from '$lib/client-server-lib/types';
 import { DefaultTheme } from '$lib/client-server-lib/utils';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async (props) => {
     const response = await props.fetch('/motor_commands.json');
-    const initialMotorCommands = await response.json() as MotorCommandsDictionary[]
+    const initialMotorCommands = await response.json() as MotorCommandType[]
 
-    const motorCommands = [QuickStartChapter, CommandsProtocolChapter, ...initialMotorCommands]
+    const motorCommands: MotorCommandType[] = [QuickStartChapter, CommandsProtocolChapter, ...initialMotorCommands]
     const themeStr = SupportedCookiesMap.get(SupportedCookies.Theme) as string
     let themeFromCookie = props.cookies.get(themeStr)
 
