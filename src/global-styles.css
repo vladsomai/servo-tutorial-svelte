@@ -4,9 +4,38 @@
 	themes: all;
 }
 
+@plugin "daisyui/theme" {
+	name: 'light';
+	default: true;
+	--color-primary: rgba(64,141,18,255);
+	/* --color-primary: rgba(114,191,68,255); */
+}
+
+@plugin "daisyui/theme" {
+	name: 'night';
+	default: true;
+	/* --color-primary: rgba(64,141,18,255); */
+	--color-primary: rgba(114,191,68,255);
+}
+
+@plugin "daisyui/theme" {
+	name: 'cupcake';
+	default: true;
+	/* --color-primary: rgba(64,141,18,255); */
+	--color-primary: rgba(114,191,68,255);
+}
+
+@plugin "daisyui/theme" {
+	name: 'dark';
+	default: true;
+	--color-primary: rgba(64,141,18,255);
+	/* --color-primary: rgba(114,191,68,255); */
+}
+
 html {
 	font-family: 'Geist', sans-serif;
 	font-optical-sizing: auto;
 	font-weight: 500;
 	font-style: normal;
+	background-color: var(--color-base-300) /* var(--color-base-300) */;
 }

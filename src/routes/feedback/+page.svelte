@@ -2,6 +2,6 @@
 </script>
 
 <div class="flex h-screen w-full flex-col items-center justify-center">
-	<h1>Home page</h1>
+	<h1>Feedback page</h1>
 	<a class="btn btn-primary" href="/docs/1001">Docs</a>
 </div>

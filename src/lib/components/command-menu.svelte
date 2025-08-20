@@ -10,7 +10,7 @@
 		<img src={LogoImg} height="auto" width="160" alt="Gearotons" />
 	</a>
 	{#each MotorCommands as MotorCommand}
-		<a href={`/docs/${MotorCommand.CommandEnum}`} class="text-sm w-full text-center hover:bg-base-100 p-1 py-3 hover:text-primary"
+		<a href={`/docs/${MotorCommand.CommandEnum}`} class="text-sm w-full text-center hover:bg-base-300 p-1 py-3 hover:text-primary rounded-r-2xl"
 			>{MotorCommand.CommandString}</a
 		>
 	{/each}

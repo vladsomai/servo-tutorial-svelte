@@ -2,6 +2,7 @@
 	import { SupportedCookies, UpdateCookie } from '$lib/client-server-lib/cookies';
 	import { SupportedThemes } from '$lib/client-server-lib/utils';
 	import { GlobalTheme } from '$lib/stores/global';
+	import ThemeIcon from '$lib/images/icons/theme-icon.svg';
 
 	const themeAttribute = 'data-theme';
 
@@ -23,8 +24,8 @@
 	}
 </script>
 
-<select class="select select-primary rounded-full w-[120px]" bind:value={theme}>
+<select class="select select-primary w-[120px] rounded-full" bind:value={theme}>
 	{#each SupportedThemes as theme}
-		<option>{theme}</option>
+		<option value={theme}>{theme}</option>
 	{/each}
 </select>

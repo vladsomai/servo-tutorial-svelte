@@ -1,18 +1,7 @@
 <script lang="ts">
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
 
-	let { data }: { data: { MotorCommands: MotorCommandType[]; CommandId: string; Theme: string } } =
-		$props();
-
-	let currentCommand = $derived.by(() => {
-		const foundCmd = data.MotorCommands.find((cmd: MotorCommandType) => {
-			if (cmd.CommandEnum.toString().toLowerCase() == data.CommandId.toLocaleLowerCase()) {
-				return true;
-			}
-		});
-
-		return foundCmd;
-	});
+	let { currentCommand }: { currentCommand: MotorCommandType | undefined } = $props();
 </script>
 
 {#if currentCommand == null}

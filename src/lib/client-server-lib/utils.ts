@@ -38,7 +38,7 @@ export const Uint8ArrayToString = (data: Uint8Array | null): string => {
     if (data == null) {
         return ""
     }
-    
+
     let hexString = ''
     for (let i = 0; i < data.length; i++) {
         let prefix = ''
@@ -49,4 +49,10 @@ export const Uint8ArrayToString = (data: Uint8Array | null): string => {
         hexString += prefix + data[i].toString(16) + postfix
     }
     return hexString.toUpperCase();
+}
+
+export function sleep(time_ms: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+        setTimeout(resolve, time_ms)
+    })
 }

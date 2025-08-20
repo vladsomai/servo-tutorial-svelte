@@ -1,12 +1,12 @@
 import { LogError, LogInfo } from "$lib/components/log-window/state.svelte";
-import { GetCurrentBrowser, Uint8ArrayToString } from "../utils";
+import { GetCurrentBrowser, sleep, Uint8ArrayToString } from "../utils";
 import { SerialPortState, SetSerialPort, SetSerialPortReader, SetSerialPortWriter } from "./state.svelte";
 
 /** This map will contain the command id as key and the response for that command id */
 export const SerialPortQueue: Map<number, Uint8Array> = new Map()
 
 let disconnectTimeout: NodeJS.Timeout | null = null
-
+let sendInProgress = false
 export class SerialPortActions {
 
     static async ConnectToSerialPort(BaudRate: number = 230400) {
@@ -67,7 +67,7 @@ export class SerialPortActions {
                     return
                 }
             } catch (err) {
-                errorStr = JSON.stringify(err)
+                errorStr = JSON.stringify(err).replaceAll("\"", "")
             }
 
             const log = `An unknown error occured: ${errorStr}`
@@ -76,9 +76,15 @@ export class SerialPortActions {
     }
 
     static async SendDataToSerialPort(dataToSend: Uint8Array) {
+
+        while (sendInProgress) {
+            await sleep(50)
+        }
+
+        sendInProgress = true
         try {
             if (SerialPortState.SerialPort == null) {
-                throw "Serial port is null while trying to send data"
+                throw "Sending data is not possible, you must connect first!"
             }
 
             if (SerialPortState.SerialPortWriter == null) {
@@ -86,12 +92,17 @@ export class SerialPortActions {
             }
 
             await SerialPortState.SerialPortWriter.write(dataToSend);
+
             let hexString = Uint8ArrayToString(dataToSend).toUpperCase();
 
             LogInfo("Sent: 0x" + hexString)
+            await sleep(100);
 
         } catch (err) {
-            LogError(JSON.stringify(err))
+            LogError(JSON.stringify(err).replaceAll("\"", ""))
+        }
+        finally {
+            sendInProgress = false
         }
     }
 
@@ -146,7 +157,7 @@ export class SerialPortActions {
                 }
             }
         } catch (err) {
-            const errStr = JSON.stringify(err)
+            const errStr = JSON.stringify(err).replaceAll("\"", "")
             LogError(`Reader threw: ${errStr}`);
         } finally {
             LogInfo(
@@ -184,7 +195,7 @@ export class SerialPortActions {
                     resolve()
                 }, 1000);
             } catch (err) {
-                const errStr = JSON.stringify(err)
+                const errStr = JSON.stringify(err).replaceAll("\"", "")
                 LogError(`Disconnect threw: ${errStr}`);
             }
         })

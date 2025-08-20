@@ -4,10 +4,27 @@
 
 	let { data }: { data: { MotorCommands: MotorCommandType[]; CommandId: string; Theme: string } } =
 		$props();
+
+	let currentCommand = $derived.by(() => {
+		const foundCmd = data.MotorCommands.find((cmd: MotorCommandType) => {
+			if (cmd.CommandEnum.toString().toLowerCase() == data.CommandId.toLocaleLowerCase()) {
+				return true;
+			}
+		});
+
+		return foundCmd;
+	});
 </script>
 
-{#await import(`./cmd${data.CommandId}.svelte`) then Widget}
-	<Widget.default />
+<div class="flex justify-between w-full">
+	<a href="/" class="btn rounded-full">Home</a>
+	<a href="/products/M1/3D" class="btn rounded-full">M1</a>
+	<a href="/products/M3/3D" class="btn rounded-full">M3</a>
+	<button class="btn rounded-full">Info</button>
+	<a href="/feedback" class="btn rounded-full">Feedback</a>
+</div>
+{#await import(`./cmd${data.CommandId}.svelte`) then Command}
+	<Command.default {currentCommand} />
 {:catch}
-	<CmdNotImplemented {data} />
+	<CmdNotImplemented {currentCommand} />
 {/await}
