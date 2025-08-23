@@ -2,21 +2,15 @@
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
 	import CmdNotImplemented from './cmd-not-implemented.svelte';
 
-	let { data }: { data: { MotorCommands: MotorCommandType[]; CommandId: string; Theme: string } } =
+	let {
+		data
+	}: { data: { MotorCommands: Map<number, MotorCommandType>; CommandId: string; Theme: string } } =
 		$props();
 
-	let currentCommand = $derived.by(() => {
-		const foundCmd = data.MotorCommands.find((cmd: MotorCommandType) => {
-			if (cmd.CommandEnum.toString().toLowerCase() == data.CommandId.toLocaleLowerCase()) {
-				return true;
-			}
-		});
-
-		return foundCmd;
-	});
+	let currentCommand = $derived(data.MotorCommands.get(Number(data.CommandId)));
 </script>
 
-<div class="flex justify-between w-full">
+<div class="flex w-full justify-between">
 	<a href="/" class="btn rounded-full">Home</a>
 	<a href="/products/M1/3D" class="btn rounded-full">M1</a>
 	<a href="/products/M3/3D" class="btn rounded-full">M3</a>

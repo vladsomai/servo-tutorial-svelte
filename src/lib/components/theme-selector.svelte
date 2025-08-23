@@ -24,7 +24,7 @@
 	}
 </script>
 
-<select class="select select-primary w-[120px] rounded-full" bind:value={theme}>
+<select class="select select-neutral w-[120px] rounded-full" bind:value={theme}>
 	{#each SupportedThemes as theme}
 		<option value={theme}>{theme}</option>
 	{/each}

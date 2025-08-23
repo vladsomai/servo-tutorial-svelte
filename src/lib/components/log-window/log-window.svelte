@@ -61,9 +61,6 @@
 				onmouseleave={() => {
 					commandsDetailsElem?.removeAttribute('open');
 				}}
-				onblur={() => {
-					console.log('blurred');
-				}}
 			>
 				<summary class="">Commands</summary>
 				<ul class="menu dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow-sm">

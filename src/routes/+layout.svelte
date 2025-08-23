@@ -46,7 +46,7 @@
 </div>
 {#if dev}
 	<div
-		class="fixed bottom-[50px] z-[2000] flex h-[50px] w-[100px] flex-col items-center justify-center rounded-2xl bg-red-400"
+		class="fixed bottom-[50px] z-[2000] flex h-[50px] w-[100px] flex-col items-center justify-center rounded-2xl bg-neutral"
 	>
 		<p>{innerWidth} px</p>
 		{#if innerWidth > 1536}
