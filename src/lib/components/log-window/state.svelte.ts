@@ -1,12 +1,16 @@
+import { GetCurrentTimestamp } from "$lib/client-server-lib/utils";
+
 export enum LogLevelType {
     Info,
     Warning,
-    Error
+    Error,
+    Command
 }
 
 export interface LogType {
     Log: string,
     Level: LogLevelType,
+    Timestamp: string
 }
 
 export interface LogWindowType {
@@ -24,7 +28,8 @@ export function ClearLogs() {
 export function LogInfo(log: string) {
     const newLog: LogType = {
         Log: log,
-        Level: LogLevelType.Info
+        Level: LogLevelType.Info,
+        Timestamp: ""
     }
     addLog(newLog)
 }
@@ -32,7 +37,8 @@ export function LogInfo(log: string) {
 export function LogWarning(log: string) {
     const newLog: LogType = {
         Log: log,
-        Level: LogLevelType.Warning
+        Level: LogLevelType.Warning,
+        Timestamp: ""
     }
     addLog(newLog)
 }
@@ -40,12 +46,24 @@ export function LogWarning(log: string) {
 export function LogError(log: string) {
     const newLog: LogType = {
         Log: log,
-        Level: LogLevelType.Error
+        Level: LogLevelType.Error,
+        Timestamp: ""
+    }
+    addLog(newLog)
+}
+
+export function LogCommand(log: string) {
+    const newLog: LogType = {
+        Log: log,
+        Level: LogLevelType.Command,
+        Timestamp: ""
     }
     addLog(newLog)
 }
 
 function addLog(newLog: LogType) {
+    const timestamp = GetCurrentTimestamp()
+    newLog.Timestamp = timestamp
     LogWindowLogs.Logs = [...LogWindowLogs.Logs, newLog]
     // LogWindowLogs.Logs.push(newLog)
 }

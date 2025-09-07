@@ -1,4 +1,4 @@
-import { LogError, LogInfo } from "$lib/components/log-window/state.svelte";
+import { LogCommand, LogError, LogInfo, LogLevelType } from "$lib/components/log-window/state.svelte";
 import { GetCurrentBrowser, sleep, Uint8ArrayToString } from "../utils";
 import { SerialPortState, SetSerialPort, SetSerialPortReader, SetSerialPortWriter } from "./state.svelte";
 
@@ -95,11 +95,10 @@ export class SerialPortActions {
 
             let hexString = Uint8ArrayToString(dataToSend).toUpperCase();
 
-            LogInfo("Sent: 0x" + hexString)
-            await sleep(100);
-
+            LogCommand("Sent: 0x" + hexString)
         } catch (err) {
             LogError(JSON.stringify(err).replaceAll("\"", ""))
+            throw err
         }
         finally {
             sendInProgress = false
@@ -150,7 +149,7 @@ export class SerialPortActions {
                 } else {
                     const receivedBytes =
                         Uint8ArrayToString(value);
-                    LogInfo(
+                    LogCommand(
                         "Received: 0x" +
                         receivedBytes
                     );

@@ -2,7 +2,8 @@ export enum SupportedCookies {
     CookieApproved,
     SignedIn,
     IsDev,
-    Theme
+    Theme,
+    ShowLogTimestamp
 }
 
 export const SupportedCookiesMap = new Map([
@@ -10,6 +11,7 @@ export const SupportedCookiesMap = new Map([
     [SupportedCookies.SignedIn, 'SignedIn'],
     [SupportedCookies.IsDev, 'IsDev'],
     [SupportedCookies.Theme, 'Theme'],
+    [SupportedCookies.ShowLogTimestamp, 'ShowLogTimestamp'],
 ])
 
 export function DeleteCookie(name: SupportedCookies) {

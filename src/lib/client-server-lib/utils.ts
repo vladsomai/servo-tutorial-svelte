@@ -1,3 +1,4 @@
+import { LogError } from "$lib/components/log-window/state.svelte"
 
 export const SupportedThemes = [
     "light",
@@ -55,4 +56,46 @@ export function sleep(time_ms: number): Promise<void> {
     return new Promise((resolve, reject) => {
         setTimeout(resolve, time_ms)
     })
+}
+
+export function ConvertAxis(axisStr: string): number {
+
+    let base = 10;
+    if (axisStr.startsWith('0x')) {
+        base = 16
+    }
+
+    let selectedAxis = 0;
+
+    if (axisStr.length == 1) {
+        //convert to char if the input is only one character
+        selectedAxis = axisStr.charCodeAt(0);
+    }
+    else {
+        selectedAxis = parseInt(axisStr, base);
+    }
+
+    if (isNaN(selectedAxis) ||
+        selectedAxis < 0 ||
+        selectedAxis > 255) {
+        LogError(`Alias must either be a valid ASCII character or a number ranging from 0 to 251!`)
+        return Number.NaN;
+    }
+
+    if (selectedAxis == 254 ||
+        selectedAxis == 253 ||
+        selectedAxis == 252
+    ) {
+        LogError(`Alias ${selectedAxis} is reserved. See protocol spec for more details.`)
+        return Number.NaN;
+    }
+
+    return selectedAxis
+
+}
+
+export function GetCurrentTimestamp() {
+    const date = new Date();
+    // ISO: 2025-09-07T17:32:12.000Z
+    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}T${date.getHours()}:${date.getMinutes()}-${date.getSeconds()}.${date.getMilliseconds()}`;
 }

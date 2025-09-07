@@ -2,8 +2,19 @@
 	import '../global-styles.css';
 	import ThemeSelector from '$lib/components/theme-selector.svelte';
 	import { dev } from '$app/environment';
+	import { ShowLogTimestamp } from '$lib/stores/global';
+	import { GetCookie, SupportedCookies, UpdateCookie } from '$lib/client-server-lib/cookies';
+	import { onMount } from 'svelte';
 	let { children, data } = $props();
 	let innerWidth = $state(0);
+
+	onMount(() => {
+		const showTimestampStr = GetCookie(SupportedCookies.ShowLogTimestamp);
+		if (showTimestampStr != null) {
+			const showTimestamp = showTimestampStr.toLowerCase() === 'true';
+			$ShowLogTimestamp = showTimestamp;
+		}
+	});
 </script>
 
 <svelte:window bind:innerWidth />
@@ -46,7 +57,7 @@
 </div>
 {#if dev}
 	<div
-		class="fixed bottom-[50px] z-[2000] flex h-[50px] w-[100px] flex-col items-center justify-center rounded-2xl bg-neutral"
+		class="bg-base-300 fixed bottom-[50px] z-[2000] flex h-[50px] w-[100px] flex-col items-center justify-center rounded-2xl"
 	>
 		<p>{innerWidth} px</p>
 		{#if innerWidth > 1536}

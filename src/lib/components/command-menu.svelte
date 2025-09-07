@@ -44,7 +44,7 @@
 							<li class="mt-3">
 								<a
 									href={`/docs/${cmdid}`}
-									class={`hover:bg-base-300 hover:text-primary ${cmdid == data.CommandId ? 'bg-base-300 text-primary' : ''} w-full rounded-r-2xl p-3 text-left text-sm `}
+									class={`hover:bg-base-300 hover:text-primary ${cmdid == data.CommandId ? 'bg-base-300 text-primary' : ''} w-full p-3 text-left text-sm rounded-l-lg rounded-r-full`}
 									>{data.MotorCommands.get(cmdid).CommandString}</a
 								>
 							</li>

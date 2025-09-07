@@ -1,15 +1,11 @@
 <script lang="ts">
 	import { SerialPortActions } from '$lib/client-server-lib/serial-communication/serial-comm';
 	import { SerialPortState } from '$lib/client-server-lib/serial-communication/state.svelte';
-	import { DisableMosfets, EnableMosfets } from '../commands/commands';
-	import {
-		LogInfo,
-		LogError,
-		LogWarning,
-		LogLevelType,
-		LogWindowLogs,
-		ClearLogs
-	} from './state.svelte';
+	import { SelectedAxis, ShowLogTimestamp } from '$lib/stores/global';
+	import { DisableMosfets, EnableMosfets, SystemReset } from '../commands/commands';
+	import ShowLogTimestampComp from '../show-log-timestamp-comp.svelte';
+	import LogLine from './log-line.svelte';
+	import { LogLevelType, LogWindowLogs, ClearLogs } from './state.svelte';
 
 	$effect(() => {
 		LogWindowLogs.Logs;
@@ -22,7 +18,7 @@
 		parentEl.scrollTo({ top: parentEl.scrollHeight, behavior: 'instant' });
 	});
 
-	let commandsDetailsElem: HTMLDetailsElement | null = $state(null);
+	let isDropdownOpen = $state(false);
 </script>
 
 <div class="h-full">
@@ -32,7 +28,7 @@
 		<div class="mt-3 flex w-full items-end justify-around">
 			{#if SerialPortState.SerialPort == null}
 				<button
-					class="btn btn-error flex flex-col rounded-b-none leading-3 hover:opacity-90 rounded-t-2xl"
+					class="btn btn-error flex flex-col rounded-b-none rounded-t-2xl leading-3 hover:opacity-90"
 					onclick={() => {
 						SerialPortActions.ConnectToSerialPort();
 					}}
@@ -42,7 +38,7 @@
 				</button>
 			{:else}
 				<button
-					class="btn btn-success flex flex-col rounded-b-none leading-3 hover:opacity-90 rounded-t-2xl"
+					class="btn btn-success flex flex-col rounded-b-none rounded-t-2xl leading-3 hover:opacity-90"
 					onclick={() => {
 						SerialPortActions.DisconnectFromSerialPort();
 					}}
@@ -51,24 +47,24 @@
 					<span class="text-[10px] normal-case"> Press to disconnect </span>
 				</button>
 			{/if}
-
+			<!-- class="dropdown dropdown-center m-0 rounded-b-none rounded-t-2xl border-2 border-neutral-300 p-2 cursor-pointer" -->
 			<details
-				bind:this={commandsDetailsElem}
-				class="dropdown dropdown-center btn btn-sm rounded-b-none rounded-t-2xl"
+				bind:open={isDropdownOpen}
+				class="dropdown dropdown-center btn btn-sm z-1 m-0 rounded-b-none rounded-t-2xl"
 				onmouseenter={() => {
-					commandsDetailsElem?.setAttribute('open', 'true');
+					isDropdownOpen = true;
 				}}
 				onmouseleave={() => {
-					commandsDetailsElem?.removeAttribute('open');
+					isDropdownOpen = false;
 				}}
 			>
-				<summary class="">Commands</summary>
-				<ul class="menu dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow-sm">
+				<summary class="text-[12px] font-semibold">Quick menu</summary>
+				<ul class="menu dropdown-content bg-base-100 rounded-box z-1 mt-4 p-2 shadow-sm">
 					<li>
 						<button
 							class="btn btn-sm"
 							onclick={() => {
-								EnableMosfets(0x58);
+								EnableMosfets($SelectedAxis);
 							}}
 						>
 							Enable MOSFETS
@@ -78,11 +74,24 @@
 						<button
 							class="btn btn-sm mt-2"
 							onclick={() => {
-								DisableMosfets(0x58);
+								DisableMosfets($SelectedAxis);
 							}}
 						>
 							Disable MOSFETS
 						</button>
+					</li>
+					<li>
+						<button
+							class="btn btn-sm mt-2"
+							onclick={() => {
+								SystemReset($SelectedAxis);
+							}}
+						>
+							System reset
+						</button>
+					</li>
+					<li>
+						<ShowLogTimestampComp />
 					</li>
 				</ul>
 			</details>
@@ -96,16 +105,33 @@
 	<div class="h-[90%] overflow-auto py-3" id="log-content-container">
 		{#each LogWindowLogs.Logs as Log, i}
 			<div class="flex w-full">
-				<p class="line-number ml-2 mr-1 w-[30px] text-sm opacity-50">
+				<p class="line-number ml-2 mr-1 w-[45px] text-right text-sm opacity-50">
 					{i + 1}
 				</p>
-				{#if Log.Level == LogLevelType.Error}
-					<p class="text-error ml-1 w-full">{Log.Log}</p>
-				{:else if Log.Level == LogLevelType.Warning}
-					<p class="text-warning ml-1 w-full">{Log.Log}</p>
-				{:else}
-					<p class="ml-1 w-full">{Log.Log}</p>
-				{/if}
+				<div class="flex w-full">
+					{#if Log.Level == LogLevelType.Error}
+						<p class="text-error w-full">
+							{#if $ShowLogTimestamp}
+								{Log.Timestamp}|
+							{/if}
+							{Log.Log}
+						</p>
+					{:else if Log.Level == LogLevelType.Warning}
+						<p class="text-warning w-full">
+							{#if $ShowLogTimestamp}
+								{Log.Timestamp}|
+							{/if}{Log.Log}
+						</p>
+					{:else if Log.Level == LogLevelType.Command}
+						<LogLine {Log} />
+					{:else}
+						<p class="w-full">
+							{#if $ShowLogTimestamp}
+								{Log.Timestamp}|
+							{/if}{Log.Log}
+						</p>
+					{/if}
+				</div>
 			</div>
 		{/each}
 	</div>
@@ -124,7 +150,8 @@
 
 <style>
 	.line-number {
-		border-right: 1px solid #6b7280;
+		border-right: 2px solid #6b7280;
 		user-select: none;
+		padding-right: 5px;
 	}
 </style>
