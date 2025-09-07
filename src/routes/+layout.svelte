@@ -50,7 +50,9 @@
 	</script>
 </svelte:head>
 
-{@render children()}
+<div class="text-base-content/70 tracking-wide">
+	{@render children()}
+</div>
 
 <div class="fixed bottom-[50px] right-[50px]">
 	<ThemeSelector IncomingTheme={data.Theme} />

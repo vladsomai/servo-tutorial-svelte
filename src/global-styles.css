@@ -7,6 +7,7 @@
 @plugin "daisyui/theme" {
 	name: 'light';
 	--color-primary: rgba(64,141,18,255);
+	
 	/* --color-primary: rgba(114,191,68,255); */
 }
 

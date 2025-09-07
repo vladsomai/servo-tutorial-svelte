@@ -21,8 +21,8 @@
 	let isDropdownOpen = $state(false);
 </script>
 
-<div class="h-full">
-	<div class=" bg-base-200 flex w-full flex-col items-center justify-center pt-3">
+<div class="h-full ">
+	<div class="bg-base-200 flex w-full flex-col items-center justify-center pt-3">
 		<p>Log window</p>
 
 		<div class="mt-3 flex w-full items-end justify-around">
@@ -108,7 +108,7 @@
 				<p class="line-number ml-2 mr-1 w-[45px] text-right text-sm opacity-50">
 					{i + 1}
 				</p>
-				<div class="flex w-full">
+				<div class="flex w-full break-all">
 					{#if Log.Level == LogLevelType.Error}
 						<p class="text-error w-full">
 							{#if $ShowLogTimestamp}

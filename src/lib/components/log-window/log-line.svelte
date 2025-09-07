@@ -6,6 +6,7 @@
 	import type { LogType } from './state.svelte';
 
 	let { Log }: { Log: LogType } = $props();
+	const IsSendCommand = Log.Log.includes('Sent') ? true : false;
 	const indexOf0x = Log.Log.indexOf('0x');
 	const logBeforeHex = Log.Log.slice(0, indexOf0x + 2);
 	const hexString = Log.Log.slice(indexOf0x + 2, Log.Log.length);
@@ -17,6 +18,9 @@
 		Color: string;
 	}
 	const logComponents: LogComponent[] = $state([]);
+
+	const cmdDescriptionReceived = ['Sender ID (R)', 'Response status', 'Length byte'];
+	const cmdDescriptionSent = ['Target motor alias', 'Command byte', 'Length byte'];
 
 	const logCompColor = [
 		' text-violet-400',
@@ -30,9 +34,16 @@
 		for (let i = 0; i < logSplitted.length; i++) {
 			const logComp: LogComponent = {
 				HexStr: logSplitted[i],
-				Description: `testing: ${logSplitted[i]}`,
+				Description: `${logSplitted[i]}`,
 				Color: i % 2 == 0 ? logCompColor[0] : logCompColor[1]
 			};
+
+			if (i < 3) {
+				const desc = IsSendCommand ? cmdDescriptionSent[i] : cmdDescriptionReceived[i];
+
+				logComp.Description = desc;
+				logComp.Color = i % 2 == 0 ? logCompColor[0] : logCompColor[1];
+			}
 
 			logComponents.push(logComp);
 		}
