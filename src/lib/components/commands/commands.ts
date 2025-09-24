@@ -84,6 +84,28 @@ function RpmToEncCnt(rpm: number) {
     return rpm * conversion_factors.shaft_rotations
 }
 
+const sixtyPow2 = 60 ** 2
+const timestepsPow2 = 31250 ** 2
+const twoPow8 = 2 ** 8
+const twoPow12 = 2 ** 12
+const twoPow32 = 2 ** 32
+
+function VelocityRpmToInternal(velocity: number, microstepsPerRoation = conversion_factors.shaft_rotations) {
+    return (velocity / 60) * (microstepsPerRoation / 31250) * (twoPow32);
+}
+
+export const InternalVelocityToCommVelocity = (internalVelocity: number): number => {
+    return internalVelocity / (twoPow12)
+}
+
+function AccelerationRpmSqToInternal(accelerationRpmSq: number, microstepsPerRoation = conversion_factors.shaft_rotations) {
+    return (accelerationRpmSq / sixtyPow2) * (microstepsPerRoation / timestepsPow2) * (twoPow32);
+}
+
+export const InternalAccelerationToCommAcceleration = (internalAcceleration: number): number => {
+    return internalAcceleration / (twoPow8)
+}
+
 function SecondsToTimesteps(seconds: number) {
     return seconds * conversion_factors.seconds
 }
@@ -103,12 +125,58 @@ function RotationsAndDurationToUint8Arr(rot: number, duration: number): Uint8Arr
     return payload
 }
 
+function AccelerationAndDurationToUint8Arr(accelerationRpmSq: number, duration: number): Uint8Array<ArrayBuffer> {
+    if (duration < 0) {
+        throw "Duration cannot be negative"
+    }
+
+    const internalAcc = AccelerationRpmSqToInternal(accelerationRpmSq)
+    const commAcc = InternalAccelerationToCommAcceleration(internalAcc)
+
+    const dist = NumberToUint8Arr(commAcc, 4)
+    const dur = NumberToUint8Arr(SecondsToTimesteps(duration), 4)
+
+    const payload = new Uint8Array(8)
+    payload.set(dist, 0)
+    payload.set(dur, 4)
+
+    return payload
+}
+
+function VelocityAndDurationToUint8Arr(velocity: number, duration: number): Uint8Array<ArrayBuffer> {
+    if (duration < 0) {
+        throw "Duration cannot be negative"
+    }
+
+    const internalVel = VelocityRpmToInternal(velocity)
+    const commVel = InternalVelocityToCommVelocity(internalVel)
+
+    const dist = NumberToUint8Arr(commVel, 4)
+    const dur = NumberToUint8Arr(SecondsToTimesteps(duration), 4)
+
+    const payload = new Uint8Array(8)
+    payload.set(dist, 0)
+    payload.set(dur, 4)
+
+    return payload
+}
+
 export class M3 {
+
     static async DisableMosfets(axisStr: string) {
         await ExecuteCommand(axisStr, 0);
     }
+
     static async EnableMosfets(axisStr: string) {
         await ExecuteCommand(axisStr, 1);
+    };
+
+    static async TrapezoidMove(axisStr: string, distanceRotation: number, durationSec: number) {
+        await ExecuteCommand(axisStr, 2, RotationsAndDurationToUint8Arr(distanceRotation, durationSec));
+    };
+
+    static async GoToPosition(axisStr: string, distanceRotation: number, durationSec: number) {
+        await ExecuteCommand(axisStr, 4, RotationsAndDurationToUint8Arr(distanceRotation, durationSec));
     };
 
     static async ResetTime(axisStr: string) {
@@ -123,29 +191,31 @@ export class M3 {
         await ExecuteCommand(axisStr, 13);
     };
 
-    static async SystemReset(axisStr: string) {
-        await ExecuteCommand(axisStr, 27);
+    static async Homing(axisStr: string, distanceRotation: number, durationSec: number) {
+        await ExecuteCommand(axisStr, 14, RotationsAndDurationToUint8Arr(distanceRotation, durationSec));
+    };
+
+    static async GoToClosedLoop(axisStr: string) {
+        await ExecuteCommand(axisStr, 17);
+    };
+
+    static async MoveWithAcceleration(axisStr: string, accelerationRpmSq: number, durationSec: number) {
+        await ExecuteCommand(axisStr, 19, AccelerationAndDurationToUint8Arr(accelerationRpmSq, durationSec));
     };
 
     static async DetectDevices(axisStr: string) {
         await ExecuteCommand(axisStr, 20);
     };
 
-    static async TrapezoidMove(axisStr: string, distanceRotation: number, durationSec: number) {
-        await ExecuteCommand(axisStr, 2, RotationsAndDurationToUint8Arr(distanceRotation, durationSec));
+    static async MoveWithVelocity(axisStr: string, velocity: number, durationSec: number) {
+        await ExecuteCommand(axisStr, 26, VelocityAndDurationToUint8Arr(velocity, durationSec));
     };
 
-    static async GoToPosition(axisStr: string, distanceRotation: number, durationSec: number) {
-        await ExecuteCommand(axisStr, 4, RotationsAndDurationToUint8Arr(distanceRotation, durationSec));
+    static async SystemReset(axisStr: string) {
+        await ExecuteCommand(axisStr, 27);
     };
 
-    static async Homing(axisStr: string, distanceRotation: number, durationSec: number) {
-        await ExecuteCommand(axisStr, 4, RotationsAndDurationToUint8Arr(distanceRotation, durationSec));
-    };
 
-    static async GoToClosedLoop(axisStr: string) {
-        await ExecuteCommand(axisStr, 17);
-    };
 }
 
 export interface ByteInterpretation {
