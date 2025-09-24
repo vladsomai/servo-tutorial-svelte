@@ -29,19 +29,55 @@
 				<p class="font-black tracking-wider">Description</p>
 				<p>{currentCommand.Description}</p>
 			</div>
-			<div class="mt-5">
+			<div class=" mt-5">
 				<p class="font-black tracking-wider">Inputs</p>
-				<p>{JSON.stringify(currentCommand.Input)}</p>
+				{#if typeof currentCommand.Input == 'string'}
+					{#if currentCommand.Input == ''}
+						<p>None</p>
+					{:else}
+						<p>{currentCommand.Input}</p>
+					{/if}
+				{:else if currentCommand.Input == null}
+					<p>None</p>
+				{:else}
+					<div class="prose">
+						<ol class="">
+							{#each currentCommand.Input as input}
+								<li>
+									<p>{input.Description}</p>
+								</li>
+							{/each}
+						</ol>
+					</div>
+				{/if}
 			</div>
 			<div class="mt-5">
 				<p class="font-black tracking-wider">Outputs</p>
-				<p>{JSON.stringify(currentCommand.Output).replaceAll('"', '')}</p>
+
+				{#if typeof currentCommand.Output == 'string'}
+					{#if currentCommand.Output == ''}
+						<p>None</p>
+					{:else}
+						<p>{currentCommand.Output}</p>
+					{/if}
+				{:else if currentCommand.Output == null}
+					<p>None</p>
+				{:else}
+					<div class="prose">
+						<ol class="">
+							{#each currentCommand.Output as output}
+								<li>
+									<p>{output.Description}</p>
+								</li>
+							{/each}
+						</ol>
+					</div>
+				{/if}
 			</div>
 		</div>
 
 		<div class="divider"></div>
 		<div class="mt-5 text-center">
-			<p class="mb-2 font-black tracking-wider">Select motor's alias</p>
 			<SelectAxis />
 		</div>
 	</div>

@@ -33,8 +33,39 @@ export const GetCurrentBrowser = (): 'Opera' | 'Edge' | 'Chrome' | 'Safari' | 'F
     }
 }
 
+/**
+ * Returns a Uint8Array representing the bytes from the hex string
+ * @param Input: "FF00A2" hex number as string to be converted to Uint8Array
+ * @param Output: [0xFF,0,0xA2]
+ */
+export const StringToUint8Array = (_value: string) => {
+    const message = _value;
+
+    if (message.length % 2 !== 0) {
+        return new Uint8Array([]);
+    }
+
+    let bytes = [];
+    for (let i = 0; i < _value.length; i += 2) {
+        const hexByteString = _value[i] + _value[i + 1];
+        bytes.push(parseInt(hexByteString, 16));
+    }
+
+    //Convert all the bytes from the bytes array to Uint8Array
+    let result = new Uint8Array(bytes.length);
+
+    result.set(bytes);
+
+    return result;
+};
+
 //Input: Uint8Array e.g. [0xFF,0xA0,0]
 //Output: hexString e.g. "FFA000"
+/**
+ * Returns a Uint8Array representing the bytes from the hex string
+ * @param Input: Uint8Array e.g. [0xFF,0xA0,0]
+ * @param Output: hex string e.g. "FFA000"
+ */
 export const Uint8ArrayToString = (data: Uint8Array | null): string => {
     if (data == null) {
         return ""
@@ -76,18 +107,16 @@ export function ConvertAxis(axisStr: string): number {
     }
 
     if (isNaN(selectedAxis) ||
-        selectedAxis < 0 ||
-        selectedAxis > 255) {
-        LogError(`Alias must either be a valid ASCII character or a number ranging from 0 to 251!`)
+        selectedAxis < 0) {
+        LogError(`Alias must either be a valid ASCII character or a number ranging from 0 to 251 / 254(for Unique ID addressing) / 255 (for broadcasting)!`)
         return Number.NaN;
     }
 
-    if (selectedAxis == 254 ||
-        selectedAxis == 253 ||
+    if (selectedAxis == 253 ||
         selectedAxis == 252
     ) {
-        LogError(`Alias ${selectedAxis} is reserved. See protocol spec for more details.`)
-        return Number.NaN;
+        LogError(`Alias ${selectedAxis} is reserved. See protocol spec for more details. Will default to 255.`)
+        throw "Alias is reserved"
     }
 
     return selectedAxis
@@ -99,3 +128,58 @@ export function GetCurrentTimestamp() {
     // ISO: 2025-09-07T17:32:12.000Z
     return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}T${date.getHours()}:${date.getMinutes()}-${date.getSeconds()}.${date.getMilliseconds()}`;
 }
+
+export type ByteSizes = 1 | 2 | 4 | 8
+export const NumberToUint8Arr = (
+    num: bigint | number,
+    size: ByteSizes,
+    littleEndian = true
+): Uint8Array => {
+    let rawArrBuffer = new ArrayBuffer(size)
+    const view = new DataView(rawArrBuffer)
+
+    switch (size) {
+        case 1:
+            view.setUint8(0, Number(num))
+            break
+        case 2:
+            view.setUint16(0, Number(num), littleEndian)
+            break
+        case 4:
+            view.setUint32(0, Number(num), littleEndian)
+            break
+        case 8:
+            view.setBigUint64(0, BigInt(num), littleEndian)
+            break
+    }
+
+    let rawCurrent = new Uint8Array(size)
+
+    for (let i = 0; i < size; i++) {
+        rawCurrent.set([view.getUint8(i)], i)
+    }
+
+    return rawCurrent
+}
+export const makeCRCTable = () => {
+    let c;
+    let crcTable = [];
+    for (let n = 0; n < 256; n++) {
+        c = n;
+        for (let k = 0; k < 8; k++) {
+            c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+        }
+        crcTable[n] = c;
+    }
+    return crcTable
+}
+
+export const crcTable = makeCRCTable();
+
+export const crc32 = (data: Uint8Array) => {
+    let crc = 0 ^ (-1);
+    for (let i = 0; i < data.length; i++) {
+        crc = (crc >>> 8) ^ crcTable[(crc ^ data[i]) & 0xFF];
+    }
+    return (crc ^ (-1)) >>> 0;
+};

@@ -4,6 +4,7 @@
 	import { onMount } from 'svelte';
 	import HexString from './hex-string.svelte';
 	import type { LogType } from './state.svelte';
+	import { InterpretCommand } from '../commands/commands';
 
 	let { Log }: { Log: LogType } = $props();
 	const IsSendCommand = Log.Log.includes('Sent') ? true : false;
@@ -31,12 +32,14 @@
 	];
 
 	onMount(() => {
+		const byteInterp = InterpretCommand(hexString);
 		for (let i = 0; i < logSplitted.length; i++) {
 			const logComp: LogComponent = {
 				HexStr: logSplitted[i],
 				Description: `${logSplitted[i]}`,
 				Color: i % 2 == 0 ? logCompColor[0] : logCompColor[1]
 			};
+
 
 			if (i < 3) {
 				const desc = IsSendCommand ? cmdDescriptionSent[i] : cmdDescriptionReceived[i];

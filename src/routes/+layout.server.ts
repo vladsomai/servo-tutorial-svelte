@@ -31,6 +31,6 @@ export const load: LayoutServerLoad = async (props) => {
     return {
         MotorCommands: motorCommandsMap,
         MotorCommandsGrouped: commandsGrouped,
-        Theme: themeFromCookie
+        Theme: themeFromCookie,
     };
 };

@@ -390,7 +390,7 @@
     {
         "CommandString": "Detect devices",
         "CommandEnum": 20,
-        "Description": "Detect all of the devices that are connected on the RS485 interface. Devices will identify themselves at a random time within one seconde. Chance of collision is possible but unlikely. You can repeat this if you suspect a collision (like if you have devices connected but they were not discovered within one to two seconds).",
+        "Description": "Detect all of the devices that are connected on the RS485 interface. Devices will identify themselves at a random time within one second. Chance of collision is possible but unlikely. You can repeat this if you suspect a collision (like if you have devices connected but they were not discovered within one to two seconds).",
         "Input": null,
         "Output": [
             {

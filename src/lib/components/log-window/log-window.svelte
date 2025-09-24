@@ -2,7 +2,7 @@
 	import { SerialPortActions } from '$lib/client-server-lib/serial-communication/serial-comm';
 	import { SerialPortState } from '$lib/client-server-lib/serial-communication/state.svelte';
 	import { SelectedAxis, ShowLogTimestamp } from '$lib/stores/global';
-	import { DisableMosfets, EnableMosfets, SystemReset } from '../commands/commands';
+	import { M3 } from '../commands/commands';
 	import ShowLogTimestampComp from '../show-log-timestamp-comp.svelte';
 	import LogLine from './log-line.svelte';
 	import { LogLevelType, LogWindowLogs, ClearLogs } from './state.svelte';
@@ -21,7 +21,7 @@
 	let isDropdownOpen = $state(false);
 </script>
 
-<div class="h-full ">
+<div class="h-full">
 	<div class="bg-base-200 flex w-full flex-col items-center justify-center pt-3">
 		<p>Log window</p>
 
@@ -64,7 +64,7 @@
 						<button
 							class="btn btn-sm"
 							onclick={() => {
-								EnableMosfets($SelectedAxis);
+								M3.EnableMosfets($SelectedAxis);
 							}}
 						>
 							Enable MOSFETS
@@ -74,7 +74,7 @@
 						<button
 							class="btn btn-sm mt-2"
 							onclick={() => {
-								DisableMosfets($SelectedAxis);
+								M3.DisableMosfets($SelectedAxis);
 							}}
 						>
 							Disable MOSFETS
@@ -84,7 +84,7 @@
 						<button
 							class="btn btn-sm mt-2"
 							onclick={() => {
-								SystemReset($SelectedAxis);
+								M3.SystemReset($SelectedAxis);
 							}}
 						>
 							System reset
@@ -108,7 +108,7 @@
 				<p class="line-number ml-2 mr-1 w-[45px] text-right text-sm opacity-50">
 					{i + 1}
 				</p>
-				<div class="flex w-full break-all">
+				<div class="flex flex-wrap w-full">
 					{#if Log.Level == LogLevelType.Error}
 						<p class="text-error w-full">
 							{#if $ShowLogTimestamp}

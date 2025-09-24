@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { EnableMosfets } from './commands';
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
 	import { SelectedAxis } from '$lib/stores/global';
+	import { M3 } from './commands';
 
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
 
 	async function enableMosfets() {
-		await EnableMosfets($SelectedAxis);
+		await M3.EnableMosfets($SelectedAxis);
 	}
 </script>
 

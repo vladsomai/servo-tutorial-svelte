@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { EnableMosfets } from './commands/commands';
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
 	import { SelectedAxis, ShowLogTimestamp } from '$lib/stores/global';
 	import { SupportedCookies, UpdateCookie } from '$lib/client-server-lib/cookies';
