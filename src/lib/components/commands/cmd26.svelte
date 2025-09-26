@@ -1,29 +1,46 @@
 <script lang="ts">
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
 	import { SelectedAxis } from '$lib/stores/global';
+	import LabeledInput from '../labeled-input.svelte';
+	import LabeledSelect from '../labeled-select.svelte';
+	import { LogWarning } from '../log-window/state.svelte';
 	import { M3 } from './commands';
+	import conversionData from './unit_conversions_M3.json';
+	const units = conversionData.units;
 
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
-	let velocity = $state(1000);
-	let duration = $state(1);
+	let velocity = $state(3);
+	let duration = $state(5);
+
+	let velocityUnit = $state(units.velocity[0]);
+	let timeUnit = $state(units.time[1]);
 </script>
 
 <div class="mb-5 mt-2 w-full">
 	<div class="flex flex-col justify-center">
 		<div class="flex flex-col items-center justify-center">
-			<label class="input input-sm w-[200px]">
-				<span class="label w-[100px]">Velocity</span>
-				<input bind:value={velocity} placeholder="" class="w-[50px]" />
-			</label>
-			<label class="input input-sm mt-2 w-[200px]">
-				<span class="label w-[100px]">Duration </span>
-				<input bind:value={duration} placeholder="" class="w-[50px]" />
-			</label>
+			<LabeledSelect
+				Class="mt-5"
+				TooltipText={''}
+				Label={'Velocity unit'}
+				bind:SelectValue={velocityUnit}
+				Options={units.velocity}
+			/>
+			<LabeledInput Class="mt-2" TooltipText={''} Label={'Velocity'} bind:InputValue={velocity} />
+
+			<LabeledSelect
+				Class="mt-5"
+				TooltipText={''}
+				Label={'Time unit'}
+				bind:SelectValue={timeUnit}
+				Options={units.time}
+			/>
+			<LabeledInput Class="mt-2" TooltipText={''} Label={'Duration'} bind:InputValue={duration} />
 		</div>
 		<button
 			class="btn btn-primary btn-sm mx-auto mt-5"
 			onclick={() => {
-				M3.MoveWithVelocity($SelectedAxis, velocity, duration);
+				M3.MoveWithVelocity($SelectedAxis, velocity, velocityUnit, duration, timeUnit);
 			}}
 		>
 			Move with velocity

@@ -134,7 +134,7 @@ export const NumberToUint8Arr = (
     num: bigint | number,
     size: ByteSizes,
     littleEndian = true
-): Uint8Array => {
+): Uint8Array<ArrayBuffer> => {
     let rawArrBuffer = new ArrayBuffer(size)
     const view = new DataView(rawArrBuffer)
 

@@ -47,7 +47,6 @@
 					<span class="text-[10px] normal-case"> Press to disconnect </span>
 				</button>
 			{/if}
-			<!-- class="dropdown dropdown-center m-0 rounded-b-none rounded-t-2xl border-2 border-neutral-300 p-2 cursor-pointer" -->
 			<details
 				bind:open={isDropdownOpen}
 				class="dropdown dropdown-center btn btn-sm z-1 m-0 rounded-b-none rounded-t-2xl"

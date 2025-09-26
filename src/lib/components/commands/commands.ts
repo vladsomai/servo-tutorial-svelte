@@ -3,6 +3,7 @@ import { ConvertAxis, crc32, NumberToUint8Arr, sleep, StringToUint8Array, Uint8A
 import { LogError, LogInfo } from "../log-window/state.svelte";
 import conversionData from "./unit_conversions_M3.json";
 const conversion_factors = conversionData.conversion_factors;
+const units = conversionData.units
 
 const DEFAULT_SLEEP = 50
 
@@ -80,83 +81,97 @@ async function ExecuteCommand(axisStr: string, commandEnum: number, payload = ne
     }
 }
 
-function RpmToEncCnt(rpm: number) {
-    return rpm * conversion_factors.shaft_rotations
-}
+function PositionAndDurationToUint8Arr(position: number, positionUnit: string,
+    duration: number, timeUnit: string): Uint8Array<ArrayBuffer> {
 
-const sixtyPow2 = 60 ** 2
-const timestepsPow2 = 31250 ** 2
-const twoPow8 = 2 ** 8
-const twoPow12 = 2 ** 12
-const twoPow32 = 2 ** 32
-
-function VelocityRpmToInternal(velocity: number, microstepsPerRoation = conversion_factors.shaft_rotations) {
-    return (velocity / 60) * (microstepsPerRoation / 31250) * (twoPow32);
-}
-
-export const InternalVelocityToCommVelocity = (internalVelocity: number): number => {
-    return internalVelocity / (twoPow12)
-}
-
-function AccelerationRpmSqToInternal(accelerationRpmSq: number, microstepsPerRoation = conversion_factors.shaft_rotations) {
-    return (accelerationRpmSq / sixtyPow2) * (microstepsPerRoation / timestepsPow2) * (twoPow32);
-}
-
-export const InternalAccelerationToCommAcceleration = (internalAcceleration: number): number => {
-    return internalAcceleration / (twoPow8)
-}
-
-function SecondsToTimesteps(seconds: number) {
-    return seconds * conversion_factors.seconds
-}
-
-function RotationsAndDurationToUint8Arr(rot: number, duration: number): Uint8Array<ArrayBuffer> {
-    if (duration < 0) {
-        throw "Duration cannot be negative"
-    }
-
-    const dist = NumberToUint8Arr(RpmToEncCnt(rot), 4)
-    const dur = NumberToUint8Arr(SecondsToTimesteps(duration), 4)
+    const posArr = PositionToUint8Arr(position, positionUnit)
+    const durArr = TimeToUint8Arr(duration, timeUnit)
 
     const payload = new Uint8Array(8)
-    payload.set(dist, 0)
-    payload.set(dur, 4)
+    payload.set(posArr, 0)
+    payload.set(durArr, 4)
 
     return payload
 }
 
-function AccelerationAndDurationToUint8Arr(accelerationRpmSq: number, duration: number): Uint8Array<ArrayBuffer> {
-    if (duration < 0) {
-        throw "Duration cannot be negative"
-    }
+function AccelerationAndDurationToUint8Arr(acceleration: number, accelerationUnit: string,
+    duration: number, timeUnit: string): Uint8Array<ArrayBuffer> {
 
-    const internalAcc = AccelerationRpmSqToInternal(accelerationRpmSq)
-    const commAcc = InternalAccelerationToCommAcceleration(internalAcc)
-
-    const dist = NumberToUint8Arr(commAcc, 4)
-    const dur = NumberToUint8Arr(SecondsToTimesteps(duration), 4)
+    const accArr = AccelerationToUint8Arr(acceleration, accelerationUnit)
+    const durArr = TimeToUint8Arr(duration, timeUnit)
 
     const payload = new Uint8Array(8)
-    payload.set(dist, 0)
-    payload.set(dur, 4)
+    payload.set(accArr, 0)
+    payload.set(durArr, 4)
 
     return payload
 }
 
-function VelocityAndDurationToUint8Arr(velocity: number, duration: number): Uint8Array<ArrayBuffer> {
-    if (duration < 0) {
-        throw "Duration cannot be negative"
+function PositionToUint8Arr(position: number, positionUnit: string) {
+    const requestedPosUnit = units.position.find((val) => val == positionUnit)
+    if (requestedPosUnit == null) {
+        throw "Position unit is not supported"
     }
 
-    const internalVel = VelocityRpmToInternal(velocity)
-    const commVel = InternalVelocityToCommVelocity(internalVel)
+    // @ts-ignore
+    const commPos = Math.ceil(conversion_factors[requestedPosUnit] * position)
+    const posArr = NumberToUint8Arr(commPos, 4)
 
-    const dist = NumberToUint8Arr(commVel, 4)
-    const dur = NumberToUint8Arr(SecondsToTimesteps(duration), 4)
+    return posArr
+}
+
+function AccelerationToUint8Arr(acceleration: number, accelerationUnit: string) {
+    const requestedAccUnit = units.acceleration.find((val) => val == accelerationUnit)
+    if (requestedAccUnit == null) {
+        throw "Acceleration unit is not supported"
+    }
+
+    // @ts-ignore
+    const commAcc = Math.ceil(conversion_factors[requestedAccUnit] * acceleration)
+    const accArr = NumberToUint8Arr(commAcc, 4)
+
+    return accArr
+}
+
+function VelocityToUint8Arr(velocity: number, velocityUnit: string) {
+    const requestedVelUnit = units.velocity.find((val) => val == velocityUnit)
+    if (requestedVelUnit == null) {
+        throw "Velocity unit is not supported"
+    }
+
+    // @ts-ignore
+    const commVel = Math.ceil(conversion_factors[requestedVelUnit] * velocity)
+    const veloArr = NumberToUint8Arr(commVel, 4)
+
+    return veloArr
+}
+
+function TimeToUint8Arr(time: number, timeUnit: string) {
+    if (time < 0) {
+        throw "Time cannot be negative"
+    }
+
+    const requestedTimeUnit = units.time.find((val) => val == timeUnit)
+    if (requestedTimeUnit == null) {
+        throw "Time unit is not supported"
+    }
+
+    // @ts-ignore
+    const commTime = Math.ceil(conversion_factors[requestedTimeUnit] * time)
+    const durArr = NumberToUint8Arr(commTime, 4)
+
+    return durArr
+}
+
+function VelocityAndDurationToUint8Arr(velocity: number, velocityUnit: string,
+    duration: number, timeUnit: string): Uint8Array<ArrayBuffer> {
+
+    const durArr = TimeToUint8Arr(duration, timeUnit)
+    const veloArr = VelocityToUint8Arr(velocity, velocityUnit)
 
     const payload = new Uint8Array(8)
-    payload.set(dist, 0)
-    payload.set(dur, 4)
+    payload.set(veloArr, 0)
+    payload.set(durArr, 4)
 
     return payload
 }
@@ -171,12 +186,22 @@ export class M3 {
         await ExecuteCommand(axisStr, 1);
     };
 
-    static async TrapezoidMove(axisStr: string, distanceRotation: number, durationSec: number) {
-        await ExecuteCommand(axisStr, 2, RotationsAndDurationToUint8Arr(distanceRotation, durationSec));
+    static async TrapezoidMove(axisStr: string, position: number, positionUnit: string,
+        duration: number, timeUnit: string) {
+        await ExecuteCommand(axisStr, 2, PositionAndDurationToUint8Arr(position, positionUnit, duration, timeUnit));
     };
 
-    static async GoToPosition(axisStr: string, distanceRotation: number, durationSec: number) {
-        await ExecuteCommand(axisStr, 4, RotationsAndDurationToUint8Arr(distanceRotation, durationSec));
+    static async SetMaxVelocity(axisStr: string, velocity: number, velocityUnit: string) {
+        await ExecuteCommand(axisStr, 3, VelocityToUint8Arr(velocity, velocityUnit));
+    };
+
+    static async GoToPosition(axisStr: string, position: number, positionUnit: string,
+        duration: number, timeUnit: string) {
+        await ExecuteCommand(axisStr, 4, PositionAndDurationToUint8Arr(position, positionUnit, duration, timeUnit));
+    };
+
+    static async SetMaxAcceleration(axisStr: string, acceleration: number, accelerationUnit: string) {
+        await ExecuteCommand(axisStr, 5, AccelerationToUint8Arr(acceleration, accelerationUnit));
     };
 
     static async ResetTime(axisStr: string) {
@@ -191,24 +216,24 @@ export class M3 {
         await ExecuteCommand(axisStr, 13);
     };
 
-    static async Homing(axisStr: string, distanceRotation: number, durationSec: number) {
-        await ExecuteCommand(axisStr, 14, RotationsAndDurationToUint8Arr(distanceRotation, durationSec));
+    static async Homing(axisStr: string, position: number, positionUnit: string, duration: number, timeUnit: string) {
+        await ExecuteCommand(axisStr, 14, PositionAndDurationToUint8Arr(position, positionUnit, duration, timeUnit));
     };
 
     static async GoToClosedLoop(axisStr: string) {
         await ExecuteCommand(axisStr, 17);
     };
 
-    static async MoveWithAcceleration(axisStr: string, accelerationRpmSq: number, durationSec: number) {
-        await ExecuteCommand(axisStr, 19, AccelerationAndDurationToUint8Arr(accelerationRpmSq, durationSec));
+    static async MoveWithAcceleration(axisStr: string, acceleration: number, accelerationUnit: string, duration: number, timeUnit: string) {
+        await ExecuteCommand(axisStr, 19, AccelerationAndDurationToUint8Arr(acceleration, accelerationUnit, duration, timeUnit));
     };
 
     static async DetectDevices(axisStr: string) {
         await ExecuteCommand(axisStr, 20);
     };
 
-    static async MoveWithVelocity(axisStr: string, velocity: number, durationSec: number) {
-        await ExecuteCommand(axisStr, 26, VelocityAndDurationToUint8Arr(velocity, durationSec));
+    static async MoveWithVelocity(axisStr: string, velocity: number, velocityUnit: string, duration: number, timeUnit: string) {
+        await ExecuteCommand(axisStr, 26, VelocityAndDurationToUint8Arr(velocity, velocityUnit, duration, timeUnit));
     };
 
     static async SystemReset(axisStr: string) {

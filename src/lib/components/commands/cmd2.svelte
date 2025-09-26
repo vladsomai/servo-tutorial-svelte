@@ -1,29 +1,46 @@
 <script lang="ts">
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
 	import { SelectedAxis } from '$lib/stores/global';
+	import LabeledInput from '../labeled-input.svelte';
+	import LabeledSelect from '../labeled-select.svelte';
 	import { M3 } from './commands';
+	import conversionData from './unit_conversions_M3.json';
+	const units = conversionData.units;
 
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
-	let rotations = $state(1);
+
+	let position = $state(1);
+	let positionUnit = $state(units.position[0]);
+
 	let duration = $state(1);
+	let timeUnit = $state(units.time[1]);
 </script>
 
 <div class="mb-5 mt-2 w-full">
 	<div class="flex flex-col justify-center">
 		<div class="flex flex-col items-center justify-center">
-			<label class="input input-sm w-[200px]">
-				<span class="label w-[100px]">Rotations</span>
-				<input bind:value={rotations} placeholder="" class="w-[50px]" />
-			</label>
-			<label class="input input-sm mt-2 w-[200px]">
-				<span class="label w-[100px]">Duration </span>
-				<input bind:value={duration} placeholder="" class="w-[50px]" />
-			</label>
+			<LabeledSelect
+				Class="mt-5"
+				TooltipText={''}
+				Label={'Position unit'}
+				bind:SelectValue={positionUnit}
+				Options={units.position}
+			/>
+			<LabeledInput Class="mt-2" TooltipText={''} Label={'Position'} bind:InputValue={position} />
+
+			<LabeledSelect
+				Class="mt-5"
+				TooltipText={''}
+				Label={'Time unit'}
+				bind:SelectValue={timeUnit}
+				Options={units.time}
+			/>
+			<LabeledInput Class="mt-2" TooltipText={''} Label={'Duration'} bind:InputValue={duration} />
 		</div>
 		<button
 			class="btn btn-primary btn-sm mx-auto mt-5"
 			onclick={() => {
-				M3.TrapezoidMove($SelectedAxis, rotations, duration);
+				M3.TrapezoidMove($SelectedAxis, position, positionUnit, duration, timeUnit);
 			}}
 		>
 			Trapezoid move

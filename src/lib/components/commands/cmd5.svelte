@@ -1,19 +1,16 @@
 <script lang="ts">
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
 	import { SelectedAxis } from '$lib/stores/global';
-	import { M3 } from './commands';
 	import LabeledInput from '../labeled-input.svelte';
 	import LabeledSelect from '../labeled-select.svelte';
+	import { LogWarning } from '../log-window/state.svelte';
+	import { M3 } from './commands';
 	import conversionData from './unit_conversions_M3.json';
 	const units = conversionData.units;
 
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
-
-	let acceleration = $state(1);
+	let acceleration = $state(3);
 	let accelerationUnit = $state(units.acceleration[0]);
-
-	let duration = $state(3);
-	let timeUnit = $state(units.time[1]);
 </script>
 
 <div class="mb-5 mt-2 w-full">
@@ -32,23 +29,14 @@
 				Label={'Acceleration'}
 				bind:InputValue={acceleration}
 			/>
-
-			<LabeledSelect
-				Class="mt-5"
-				TooltipText={''}
-				Label={'Time unit'}
-				bind:SelectValue={timeUnit}
-				Options={units.time}
-			/>
-			<LabeledInput Class="mt-2" TooltipText={''} Label={'Duration'} bind:InputValue={duration} />
 		</div>
 		<button
 			class="btn btn-primary btn-sm mx-auto mt-5"
 			onclick={() => {
-				M3.MoveWithAcceleration($SelectedAxis, acceleration, accelerationUnit, duration, timeUnit);
+				M3.SetMaxAcceleration($SelectedAxis, acceleration, accelerationUnit);
 			}}
 		>
-			Move with acceleration
+			Set max acceleration
 		</button>
 	</div>
 </div>
