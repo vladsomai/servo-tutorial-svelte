@@ -101,9 +101,13 @@
 		<button
 			class="btn btn-primary btn-sm mx-auto mt-5"
 			onclick={() => {
+				if (multimoveInputs.length == 0) {
+					LogWarning('Add at least one move command');
+					return;
+				}
 				const cmdFunction = GetFuncNameFromCmdString(currentCommand.CommandString);
 
-				const noOfMoves = { value: multimoveInputs.length, type: 'moveCount', unit: 'moveCount' };
+				const noOfMoves = { value: multimoveInputs.length, type: 'number', unit: '' };
 				let moveTypesBits = 0;
 				let moveTypes = {};
 				let rawMoves: any[] = [];
@@ -114,7 +118,7 @@
 						moveTypesBits |= mask;
 					}
 
-					moveTypes = { value: moveTypesBits, type: 'moveTypes', unit: 'moveTypes' };
+					moveTypes = { value: moveTypesBits, type: 'number', unit: '' };
 
 					const currentMoveVal = {
 						value: multimoveInputs[i].value,
@@ -131,7 +135,11 @@
 					rawMoves.push([currentMoveVal, currentMoveDur]);
 				}
 
-				const moves = { value: rawMoves, type: 'mixed_acceleration_velocity_time', unit: 'mixed_acceleration_velocity_time' };
+				const moves = {
+					value: rawMoves,
+					type: 'mixed_acceleration_velocity_time',
+					unit: 'mixed_acceleration_velocity_time'
+				};
 
 				// @ts-ignore
 				M3[cmdFunction]($SelectedAxis, currentCommand, [noOfMoves, moveTypes, moves]);

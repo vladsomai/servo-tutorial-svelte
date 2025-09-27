@@ -129,13 +129,19 @@ export function GetCurrentTimestamp() {
     return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}T${date.getHours()}:${date.getMinutes()}-${date.getSeconds()}.${date.getMilliseconds()}`;
 }
 
-export type ByteSizes = 1 | 2 | 4 | 8
+export type ByteSizes = 1 | 2 | 4 | 6 | 8
 export const NumberToUint8Arr = (
     num: bigint | number,
     size: ByteSizes,
     littleEndian = true
 ): Uint8Array<ArrayBuffer> => {
+
+
     let rawArrBuffer = new ArrayBuffer(size)
+    if (size == 6) {
+        /**Extend the array buffer so that bigint fits */
+        rawArrBuffer = new ArrayBuffer(8)
+    }
     const view = new DataView(rawArrBuffer)
 
     switch (size) {
@@ -148,11 +154,14 @@ export const NumberToUint8Arr = (
         case 4:
             view.setUint32(0, Number(num), littleEndian)
             break
+        case 6:
+            view.setBigUint64(0, BigInt(num), littleEndian)
+            break
         case 8:
             view.setBigUint64(0, BigInt(num), littleEndian)
             break
         default:
-            throw `Unsuppoerted byte size when convering ${num} to Uint8Arr: byte size received ${size}`
+            throw `Unsupported byte size when converting ${num} to Uint8Arr: byte size received ${size}`
     }
 
     let rawCurrent = new Uint8Array(size)

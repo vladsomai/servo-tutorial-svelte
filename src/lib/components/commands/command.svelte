@@ -84,7 +84,7 @@
 			<SelectAxis />
 			{#if currentCommand.Input == null}
 				<button
-					class="btn btn-primary btn-sm mx-auto mt-5"
+					class="btn btn-primary btn-sm mx-auto my-5"
 					onclick={() => {
 						const cmdFunction = GetFuncNameFromCmdString(currentCommand.CommandString);
 

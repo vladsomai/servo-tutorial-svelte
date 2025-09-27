@@ -193,10 +193,11 @@ function GetCommValueFromValueType(value: any, unit: string, type: string, byteS
     else if (type == 'acceleration') {
         return AccelerationToUint8Arr(value, unit)
     }
-    else if (type == "moveCount") {
-        return NumberToUint8Arr(value, byteSize as ByteSizes)
-    }
-    else if (type == "moveTypes") {
+    else if (type == "number") {
+        console.log(type, value)
+        if (typeof value != 'number') {
+            throw `Value type is incorrect, expected number but received ${typeof value}`
+        }
         return NumberToUint8Arr(value, byteSize as ByteSizes)
     }
     else if (type == "mixed_acceleration_velocity_time") {
@@ -205,7 +206,14 @@ function GetCommValueFromValueType(value: any, unit: string, type: string, byteS
     else if (type == "current") {
         return NumberToUint8Arr(value, byteSize as ByteSizes)
     }
+    else if (type == "string") {
+        if (typeof value != 'string') {
+            throw `Value type is incorrect, expected string but received ${typeof value}`
+        }
 
+        const valueTruncated = value.slice(0, byteSize).padEnd(byteSize, ' ')
+        return new Uint8Array([...valueTruncated].map(c => c.charCodeAt(0)));
+    }
     throw "Conversion not supported"
 }
 
@@ -265,14 +273,24 @@ async function ExecuteGenericCommand(axisStr: string, command: MotorCommandType,
         const arg = args[i]
 
         let currentParamType = ""
-        if (inp.UnitConversion != null && inp.UnitConversion.Type != null) {
+
+        if (inp.UnitConversion == null) {
+            /** When the unit conversion is not specified, treat it as a number or string */
+
+            if (typeof arg.value == 'number') {
+                currentParamType = 'number'
+            } else if (typeof arg.value == 'string') {
+                currentParamType = 'string'
+            }
+            else {
+                throw "Default type is not supported, expected number or string"
+            }
+        }
+        else if (inp.UnitConversion != null && inp.UnitConversion.Type != null) {
             currentParamType = inp.UnitConversion.Type
         }
-        else if (inp.ParameterName != null) {
-            currentParamType = inp.ParameterName
-        }
         else {
-            throw `INVALID COMMAND: expected at least UnitConversion or ParameterName to be defined`
+            throw `INVALID COMMAND: expected at least UnitConversion with Type to be defined`
         }
 
         if (currentParamType != arg.type) {
@@ -285,6 +303,7 @@ async function ExecuteGenericCommand(axisStr: string, command: MotorCommandType,
             throw `Command definition ${command.CommandString} is invalid, expected type to be defined in \"Description\" field for input ${i} (e.g. i32)`
         }
 
+        console.log(noOfBytes)
         const valArr = GetCommValueFromValueType(arg.value, arg.unit, arg.type, noOfBytes)
         inputChunks.push(valArr)
 
