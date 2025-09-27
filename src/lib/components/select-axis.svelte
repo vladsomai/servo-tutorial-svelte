@@ -3,4 +3,10 @@
 	import LabeledInput from './labeled-input.svelte';
 </script>
 
-<LabeledInput Class="mt-2" TooltipText={''} Label={'Alias'} bind:InputValue={$SelectedAxis} />
+<LabeledInput
+	Class="mt-2"
+	TooltipText={''}
+	Label={'Alias'}
+	bind:InputValue={$SelectedAxis}
+	Type="string"
+/>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
+	import { GetFuncNameFromCmdString } from '$lib/client-server-lib/utils';
 	import { SelectedAxis } from '$lib/stores/global';
 	import LabeledInput from '../labeled-input.svelte';
 	import LabeledSelect from '../labeled-select.svelte';
@@ -30,13 +31,17 @@
 				bind:InputValue={acceleration}
 			/>
 		</div>
+		
 		<button
 			class="btn btn-primary btn-sm mx-auto mt-5"
 			onclick={() => {
-				M3.SetMaxAcceleration($SelectedAxis, acceleration, accelerationUnit);
-			}}
+				const cmdFunction = GetFuncNameFromCmdString(currentCommand.CommandString);
+
+				// @ts-ignore
+				M3[cmdFunction]($SelectedAxis, currentCommand, [
+					{ value: acceleration, type: 'acceleration', unit: accelerationUnit },
+				]);
+			}}>{currentCommand.CommandString}</button
 		>
-			Set max acceleration
-		</button>
 	</div>
 </div>

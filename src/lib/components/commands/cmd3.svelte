@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
+	import { GetFuncNameFromCmdString } from '$lib/client-server-lib/utils';
 	import { SelectedAxis } from '$lib/stores/global';
 	import LabeledInput from '../labeled-input.svelte';
 	import LabeledSelect from '../labeled-select.svelte';
@@ -28,10 +29,13 @@
 		<button
 			class="btn btn-primary btn-sm mx-auto mt-5"
 			onclick={() => {
-				M3.SetMaxVelocity($SelectedAxis, velocity, velocityUnit);
-			}}
+				const cmdFunction = GetFuncNameFromCmdString(currentCommand.CommandString);
+
+				// @ts-ignore
+				M3[cmdFunction]($SelectedAxis, currentCommand, [
+					{ value: velocity, type: 'velocity', unit: velocityUnit }
+				]);
+			}}>{currentCommand.CommandString}</button
 		>
-			Set max velocity
-		</button>
 	</div>
 </div>

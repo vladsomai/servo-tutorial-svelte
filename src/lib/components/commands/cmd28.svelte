@@ -10,33 +10,25 @@
 
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
 
-	let position = $state(1);
-	let positionUnit = $state(units.position[0]);
-
-	let duration = $state(1);
-	let timeUnit = $state(units.time[1]);
+	let maxCurrent = $state(200);
+	let regenCurrent = $state(0);
 </script>
 
 <div class="mb-5 mt-2 w-full">
 	<div class="flex flex-col justify-center">
 		<div class="flex flex-col items-center justify-center">
-			<LabeledSelect
-				Class="mt-5"
+			<LabeledInput
+				Class="mt-2"
 				TooltipText={''}
-				Label={'Position unit'}
-				bind:SelectValue={positionUnit}
-				Options={units.position}
+				Label={'Max current'}
+				bind:InputValue={maxCurrent}
 			/>
-			<LabeledInput Class="mt-2" TooltipText={''} Label={'Position'} bind:InputValue={position} />
-
-			<LabeledSelect
-				Class="mt-5"
+			<LabeledInput
+				Class="mt-2"
 				TooltipText={''}
-				Label={'Time unit'}
-				bind:SelectValue={timeUnit}
-				Options={units.time}
+				Label={'Regen current'}
+				bind:InputValue={regenCurrent}
 			/>
-			<LabeledInput Class="mt-2" TooltipText={''} Label={'Duration'} bind:InputValue={duration} />
 		</div>
 
 		<button
@@ -46,8 +38,8 @@
 
 				// @ts-ignore
 				M3[cmdFunction]($SelectedAxis, currentCommand, [
-					{ value: position, type: 'position', unit: positionUnit },
-					{ value: duration, type: 'time', unit: timeUnit }
+					{ value: maxCurrent, type: 'current', unit: '' },
+					{ value: regenCurrent, type: 'current', unit: '' }
 				]);
 			}}>{currentCommand.CommandString}</button
 		>

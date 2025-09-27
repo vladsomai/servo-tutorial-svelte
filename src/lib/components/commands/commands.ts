@@ -1,5 +1,7 @@
+import { browser } from "$app/environment";
 import { SerialPortActions } from "$lib/client-server-lib/serial-communication/serial-comm";
-import { ConvertAxis, crc32, NumberToUint8Arr, sleep, StringToUint8Array, Uint8ArrayToString } from "$lib/client-server-lib/utils";
+import type { MotorCommandType } from "$lib/client-server-lib/types";
+import { ConvertAxis, crc32, GetFuncNameFromCmdString, NumberToUint8Arr, ParametersByteCount, sleep, StringToUint8Array, Uint8ArrayToString, type ByteSizes } from "$lib/client-server-lib/utils";
 import { LogError, LogInfo } from "../log-window/state.svelte";
 import conversionData from "./unit_conversions_M3.json";
 const conversion_factors = conversionData.conversion_factors;
@@ -7,7 +9,11 @@ const units = conversionData.units
 
 const DEFAULT_SLEEP = 50
 
-
+let mtrCommands: MotorCommandType[] = []
+if (browser) {
+    const res = await fetch('/motor_commands.json');
+    mtrCommands = await res.json() as MotorCommandType[];
+}
 
 function ConstructCommand(axisStr: string, commandEnum: number, payload: Uint8Array, crc32Enabled: boolean = true): Uint8Array {
     let address = ConvertAxis(axisStr)
@@ -81,41 +87,15 @@ async function ExecuteCommand(axisStr: string, commandEnum: number, payload = ne
     }
 }
 
-function PositionAndDurationToUint8Arr(position: number, positionUnit: string,
-    duration: number, timeUnit: string): Uint8Array<ArrayBuffer> {
-
-    const posArr = PositionToUint8Arr(position, positionUnit)
-    const durArr = TimeToUint8Arr(duration, timeUnit)
-
-    const payload = new Uint8Array(8)
-    payload.set(posArr, 0)
-    payload.set(durArr, 4)
-
-    return payload
-}
-
-function AccelerationAndDurationToUint8Arr(acceleration: number, accelerationUnit: string,
-    duration: number, timeUnit: string): Uint8Array<ArrayBuffer> {
-
-    const accArr = AccelerationToUint8Arr(acceleration, accelerationUnit)
-    const durArr = TimeToUint8Arr(duration, timeUnit)
-
-    const payload = new Uint8Array(8)
-    payload.set(accArr, 0)
-    payload.set(durArr, 4)
-
-    return payload
-}
-
-function PositionToUint8Arr(position: number, positionUnit: string) {
+function PositionToUint8Arr(position: number, positionUnit: string, byteSize: number) {
     const requestedPosUnit = units.position.find((val) => val == positionUnit)
     if (requestedPosUnit == null) {
-        throw "Position unit is not supported"
+        throw `Position unit is not supported: ${positionUnit}`
     }
 
     // @ts-ignore
     const commPos = Math.ceil(conversion_factors[requestedPosUnit] * position)
-    const posArr = NumberToUint8Arr(commPos, 4)
+    const posArr = NumberToUint8Arr(commPos, byteSize as ByteSizes)
 
     return posArr
 }
@@ -123,7 +103,7 @@ function PositionToUint8Arr(position: number, positionUnit: string) {
 function AccelerationToUint8Arr(acceleration: number, accelerationUnit: string) {
     const requestedAccUnit = units.acceleration.find((val) => val == accelerationUnit)
     if (requestedAccUnit == null) {
-        throw "Acceleration unit is not supported"
+        throw `Acceleration unit is not supported: ${accelerationUnit}`
     }
 
     // @ts-ignore
@@ -136,7 +116,7 @@ function AccelerationToUint8Arr(acceleration: number, accelerationUnit: string) 
 function VelocityToUint8Arr(velocity: number, velocityUnit: string) {
     const requestedVelUnit = units.velocity.find((val) => val == velocityUnit)
     if (requestedVelUnit == null) {
-        throw "Velocity unit is not supported"
+        throw `Velocity unit is not supported: ${velocityUnit}`
     }
 
     // @ts-ignore
@@ -153,7 +133,7 @@ function TimeToUint8Arr(time: number, timeUnit: string) {
 
     const requestedTimeUnit = units.time.find((val) => val == timeUnit)
     if (requestedTimeUnit == null) {
-        throw "Time unit is not supported"
+        throw `Time unit is not supported: ${timeUnit}`
     }
 
     // @ts-ignore
@@ -163,20 +143,76 @@ function TimeToUint8Arr(time: number, timeUnit: string) {
     return durArr
 }
 
-function VelocityAndDurationToUint8Arr(velocity: number, velocityUnit: string,
-    duration: number, timeUnit: string): Uint8Array<ArrayBuffer> {
+function Multimoves(multimoves: any[]): Uint8Array<ArrayBuffer> {
 
-    const durArr = TimeToUint8Arr(duration, timeUnit)
-    const veloArr = VelocityToUint8Arr(velocity, velocityUnit)
+    let moveChucks = []
 
-    const payload = new Uint8Array(8)
-    payload.set(veloArr, 0)
-    payload.set(durArr, 4)
+    for (let move of multimoves) {
+        const velOrAcc = move[0]
+        const time = move[1]
 
-    return payload
+        let velOrAccArr = new Uint8Array()
+        if (velOrAcc.type == "velocity") {
+            velOrAccArr = VelocityToUint8Arr(velOrAcc.value, velOrAcc.unit)
+        }
+        else if (velOrAcc.type == 'acceleration') {
+            velOrAccArr = AccelerationToUint8Arr(velOrAcc.value, velOrAcc.unit)
+        }
+        else {
+            throw `Multimove expected velocity or acceleration but received ${velOrAcc.type}`
+        }
+
+        const timeArr = TimeToUint8Arr(time.value, time.unit)
+
+        moveChucks.push(velOrAccArr)
+        moveChucks.push(timeArr)
+    }
+
+    const multimovesSize = moveChucks.reduce((sum, chunk) => sum + chunk.length, 0)
+    const multimovesArr = new Uint8Array(multimovesSize)
+
+    let offset = 0
+    for (const chunk of moveChucks) {
+        multimovesArr.set(chunk, offset)
+        offset += chunk.length
+    }
+    return multimovesArr
+}
+
+function GetCommValueFromValueType(value: any, unit: string, type: string, byteSize: number): Uint8Array<ArrayBuffer> {
+
+    if (type == 'position') {
+        return PositionToUint8Arr(value, unit, byteSize)
+    }
+    else if (type == 'time') {
+        return TimeToUint8Arr(value, unit)
+    }
+    else if (type == 'velocity') {
+        return VelocityToUint8Arr(value, unit)
+    }
+    else if (type == 'acceleration') {
+        return AccelerationToUint8Arr(value, unit)
+    }
+    else if (type == "moveCount") {
+        return NumberToUint8Arr(value, byteSize as ByteSizes)
+    }
+    else if (type == "moveTypes") {
+        return NumberToUint8Arr(value, byteSize as ByteSizes)
+    }
+    else if (type == "mixed_acceleration_velocity_time") {
+        return Multimoves(value)
+    }
+    else if (type == "current") {
+        return NumberToUint8Arr(value, byteSize as ByteSizes)
+    }
+
+    throw "Conversion not supported"
 }
 
 export class M3 {
+    static async ExecuteCommand(axisStr: string, commandEnum: number) {
+        ExecuteCommand(axisStr, commandEnum)
+    }
 
     static async DisableMosfets(axisStr: string) {
         await ExecuteCommand(axisStr, 0);
@@ -186,61 +222,89 @@ export class M3 {
         await ExecuteCommand(axisStr, 1);
     };
 
-    static async TrapezoidMove(axisStr: string, position: number, positionUnit: string,
-        duration: number, timeUnit: string) {
-        await ExecuteCommand(axisStr, 2, PositionAndDurationToUint8Arr(position, positionUnit, duration, timeUnit));
-    };
-
-    static async SetMaxVelocity(axisStr: string, velocity: number, velocityUnit: string) {
-        await ExecuteCommand(axisStr, 3, VelocityToUint8Arr(velocity, velocityUnit));
-    };
-
-    static async GoToPosition(axisStr: string, position: number, positionUnit: string,
-        duration: number, timeUnit: string) {
-        await ExecuteCommand(axisStr, 4, PositionAndDurationToUint8Arr(position, positionUnit, duration, timeUnit));
-    };
-
-    static async SetMaxAcceleration(axisStr: string, acceleration: number, accelerationUnit: string) {
-        await ExecuteCommand(axisStr, 5, AccelerationToUint8Arr(acceleration, accelerationUnit));
-    };
-
-    static async ResetTime(axisStr: string) {
-        await ExecuteCommand(axisStr, 8);
-    };
-
-    static async EmergencyStop(axisStr: string) {
-        await ExecuteCommand(axisStr, 12);
-    };
-
-    static async ZeroPosition(axisStr: string) {
-        await ExecuteCommand(axisStr, 13);
-    };
-
-    static async Homing(axisStr: string, position: number, positionUnit: string, duration: number, timeUnit: string) {
-        await ExecuteCommand(axisStr, 14, PositionAndDurationToUint8Arr(position, positionUnit, duration, timeUnit));
-    };
-
-    static async GoToClosedLoop(axisStr: string) {
-        await ExecuteCommand(axisStr, 17);
-    };
-
-    static async MoveWithAcceleration(axisStr: string, acceleration: number, accelerationUnit: string, duration: number, timeUnit: string) {
-        await ExecuteCommand(axisStr, 19, AccelerationAndDurationToUint8Arr(acceleration, accelerationUnit, duration, timeUnit));
-    };
-
-    static async DetectDevices(axisStr: string) {
-        await ExecuteCommand(axisStr, 20);
-    };
-
-    static async MoveWithVelocity(axisStr: string, velocity: number, velocityUnit: string, duration: number, timeUnit: string) {
-        await ExecuteCommand(axisStr, 26, VelocityAndDurationToUint8Arr(velocity, velocityUnit, duration, timeUnit));
-    };
-
     static async SystemReset(axisStr: string) {
         await ExecuteCommand(axisStr, 27);
     };
 
+    static async GetStatus(axisStr: string) {
+        await ExecuteCommand(axisStr, 16);
+    };
+}
 
+async function ExecuteGenericCommand(axisStr: string, command: MotorCommandType, args: any[]) {
+    let argsStr = ""
+
+    if (args != null) {
+        for (let arg of args) {
+            const kvps = Object.entries(arg)
+            for (const kvp of kvps) {
+                argsStr += `${kvp[0]}: ${kvp[1]},`
+            }
+        }
+    }
+    console.log(`Executing ${command.CommandString}: ${command.CommandEnum}| Args:${argsStr} `)
+
+    if (command.Input == null) {
+        // This method does not need any inputs
+        await ExecuteCommand(axisStr, command.CommandEnum, new Uint8Array());
+        return;
+    }
+
+    if (!Array.isArray(command.Input)) {
+        throw `Command ${command.CommandString} does not define an array of inputs`
+    }
+
+    if (command.Input.length != args.length) {
+        throw `Incorrect number of inputs: expected ${command.Input.length}, received ${args.length} `
+    }
+
+    const inputChunks: Uint8Array[] = []
+    // Transform the inputs to the correct unit
+    for (let i = 0; i < command.Input.length; i++) {
+        const inp = command.Input[i]
+        const arg = args[i]
+
+        let currentParamType = ""
+        if (inp.UnitConversion != null && inp.UnitConversion.Type != null) {
+            currentParamType = inp.UnitConversion.Type
+        }
+        else if (inp.ParameterName != null) {
+            currentParamType = inp.ParameterName
+        }
+        else {
+            throw `INVALID COMMAND: expected at least UnitConversion or ParameterName to be defined`
+        }
+
+        if (currentParamType != arg.type) {
+            throw `Incorrect argument type: expected ${currentParamType}, received ${arg.type}`
+        }
+
+        const inpType = inp.Description.slice(0, inp.Description.indexOf(":"))
+        const noOfBytes = ParametersByteCount.get(inpType)
+        if (noOfBytes == null) {
+            throw `Command definition ${command.CommandString} is invalid, expected type to be defined in \"Description\" field for input ${i} (e.g. i32)`
+        }
+
+        const valArr = GetCommValueFromValueType(arg.value, arg.unit, arg.type, noOfBytes)
+        inputChunks.push(valArr)
+
+
+    }
+    const payloadLength = inputChunks.reduce((sum, chunk) => sum + chunk.length, 0)
+    const payload = new Uint8Array(payloadLength)
+    let offset = 0
+    for (const chunk of inputChunks) {
+        payload.set(chunk, offset)
+        offset += chunk.length
+    }
+    await ExecuteCommand(axisStr, command.CommandEnum, payload);
+}
+
+for (let cmd of mtrCommands) {
+    const cmdFunction = GetFuncNameFromCmdString(cmd.CommandString)
+
+    // @ts-ignore
+    M3[cmdFunction] = ExecuteGenericCommand
 }
 
 export interface ByteInterpretation {

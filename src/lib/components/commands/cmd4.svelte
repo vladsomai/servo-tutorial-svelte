@@ -6,6 +6,7 @@
 	import LabeledSelect from '../labeled-select.svelte';
 
 	import conversionData from './unit_conversions_M3.json';
+	import { GetFuncNameFromCmdString } from '$lib/client-server-lib/utils';
 	const units = conversionData.units;
 
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
@@ -38,13 +39,18 @@
 			/>
 			<LabeledInput Class="mt-2" TooltipText={''} Label={'Duration'} bind:InputValue={duration} />
 		</div>
-		<button
+
+				<button
 			class="btn btn-primary btn-sm mx-auto mt-5"
 			onclick={() => {
-				M3.GoToPosition($SelectedAxis, position, positionUnit, duration, timeUnit);
-			}}
+				const cmdFunction = GetFuncNameFromCmdString(currentCommand.CommandString);
+
+				// @ts-ignore
+				M3[cmdFunction]($SelectedAxis, currentCommand, [
+					{ value: position, type: 'position', unit: positionUnit },
+					{ value: duration, type: 'time', unit: timeUnit }
+				]);
+			}}>{currentCommand.CommandString}</button
 		>
-			Go to position
-		</button>
 	</div>
 </div>

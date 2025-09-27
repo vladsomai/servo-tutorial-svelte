@@ -6,6 +6,7 @@
 	import ShowLogTimestampComp from '../show-log-timestamp-comp.svelte';
 	import LogLine from './log-line.svelte';
 	import { LogLevelType, LogWindowLogs, ClearLogs } from './state.svelte';
+	let { data } = $props();
 
 	$effect(() => {
 		LogWindowLogs.Logs;
@@ -89,6 +90,17 @@
 							System reset
 						</button>
 					</li>
+
+										<li>
+						<button
+							class="btn btn-sm mt-2"
+							onclick={() => {
+								M3.GetStatus($SelectedAxis);
+							}}
+						>
+							Get status
+						</button>
+					</li>
 					<li>
 						<ShowLogTimestampComp />
 					</li>
@@ -107,7 +119,7 @@
 				<p class="line-number ml-2 mr-1 w-[45px] text-right text-sm opacity-50">
 					{i + 1}
 				</p>
-				<div class="flex flex-wrap w-full">
+				<div class="flex w-full flex-wrap">
 					{#if Log.Level == LogLevelType.Error}
 						<p class="text-error w-full">
 							{#if $ShowLogTimestamp}

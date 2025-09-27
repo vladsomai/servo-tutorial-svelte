@@ -27,6 +27,6 @@
 		id="parent-log-window"
 		class="bg-base-100 h-[98vh] w-5/12 overflow-auto rounded-2xl 2xl:w-[45%]"
 	>
-		<LogWindow />
+		<LogWindow {data} />
 	</section>
 </div>

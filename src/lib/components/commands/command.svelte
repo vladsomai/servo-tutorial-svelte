@@ -2,6 +2,9 @@
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
 	import CmdNotImplemented from './cmd-not-implemented.svelte';
 	import SelectAxis from '../select-axis.svelte';
+	import { M3 } from './commands';
+	import { GetFuncNameFromCmdString } from '$lib/client-server-lib/utils';
+	import { SelectedAxis } from '$lib/stores/global';
 
 	let {
 		data
@@ -77,13 +80,32 @@
 		</div>
 
 		<div class="divider"></div>
-		<div class="mt-5 text-center">
+		<div class="mt-5 flex flex-col text-center">
 			<SelectAxis />
+			{#if currentCommand.Input == null}
+				<button
+					class="btn btn-primary btn-sm mx-auto mt-5"
+					onclick={() => {
+						const cmdFunction = GetFuncNameFromCmdString(currentCommand.CommandString);
+
+						// @ts-ignore
+						M3[cmdFunction]($SelectedAxis, currentCommand, []);
+					}}>{currentCommand.CommandString}</button
+				>
+			{/if}
 		</div>
 	</div>
 {/if}
 {#await import(`./cmd${data.CommandId}.svelte`) then Command}
 	<Command.default {currentCommand}></Command.default>
 {:catch}
-	<CmdNotImplemented {currentCommand} />
+	<!-- A dedicated component is not defined for this currentCommand -->
+
+	{#if currentCommand == null || (currentCommand != null && currentCommand.Input != null)}
+		<!-- Show command not implemented when: 
+		 1. The current command does not exist
+		 2. The current command exists and needs input but the UI component is not defined  
+		This is because any commands that needs inputs, must have a dedicated page to collect user's input -->
+		<CmdNotImplemented {currentCommand} />
+	{/if}
 {/await}

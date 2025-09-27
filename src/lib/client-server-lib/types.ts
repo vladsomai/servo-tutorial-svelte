@@ -3,13 +3,21 @@ export type MotorCommandType = {
     CommandEnum: number, //Command id
     CommandGroup: string,
     Description: string,
-    Input: InputOutputObjects[] | string, //Text for the input to be shown in each command window
-    Output: InputOutputObjects[] | string, //Text for the output of each command
+    Input: InputOutputObjects[] | null, //Text for the input to be shown in each command window
+    Output: InputOutputObjects[] | null, //Text for the output of each command
 }
 
 export interface InputOutputObjects {
     Description: string
-    TooltipDisplayFormat?: string
+    TooltipDisplayFormat?: string,
+    ParameterName?: string
+    UnitConversion?: UnitConversionType
+}
+
+export interface UnitConversionType {
+    Type: string,
+    InternalUnit: string
+    ConversionFactorsFile: string
 }
 
 export const CommandsProtocolChapter: MotorCommandType = {
@@ -17,8 +25,8 @@ export const CommandsProtocolChapter: MotorCommandType = {
     CommandEnum: 1001,
     CommandGroup: "Get started",
     Description: "",
-    Input: "",
-    Output: ""
+    Input: null,
+    Output: null
 }
 
 export const QuickStartChapter: MotorCommandType = {
@@ -26,6 +34,6 @@ export const QuickStartChapter: MotorCommandType = {
     CommandEnum: 1002,
     CommandGroup: "Get started",
     Description: "",
-    Input: "",
-    Output: ""
+    Input: null,
+    Output: null
 }

@@ -1,16 +1,18 @@
 <script lang="ts">
 	let {
-		TooltipText,
+		TooltipText = '',
 		Label,
 		SelectValue = $bindable(),
 		Class = '',
-		Options
+		Options,
+		Onchange = () => {}
 	}: {
-		TooltipText: string;
+		TooltipText?: string;
 		Label: string;
 		SelectValue: string;
-		Class: string;
+		Class?: string;
 		Options: string[];
+		Onchange?: Function;
 	} = $props();
 </script>
 
@@ -22,7 +24,13 @@
 	{/if}
 	<label class={`select select-sm w-[200px] ${Class}`}>
 		<span class="label w-[100px]">{Label} </span>
-		<select class="" bind:value={SelectValue}>
+		<select
+			class=""
+			bind:value={SelectValue}
+			onchange={(e) => {
+				Onchange(e);
+			}}
+		>
 			{#each Options as opt}
 				<option>{opt}</option>
 			{/each}

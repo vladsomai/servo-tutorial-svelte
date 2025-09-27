@@ -151,6 +151,8 @@ export const NumberToUint8Arr = (
         case 8:
             view.setBigUint64(0, BigInt(num), littleEndian)
             break
+        default:
+            throw `Unsuppoerted byte size when convering ${num} to Uint8Arr: byte size received ${size}`
     }
 
     let rawCurrent = new Uint8Array(size)
@@ -183,3 +185,35 @@ export const crc32 = (data: Uint8Array) => {
     }
     return (crc ^ (-1)) >>> 0;
 };
+
+export function GetFuncNameFromCmdString(cmdString: string) {
+    return cmdString.replaceAll(" ", "_")
+}
+
+export const ParametersByteCount = new Map<string, number>([
+    ["i8", 1],
+    ["u8", 1],
+    ["i16", 2],
+    ["u16", 2],
+    ["i24", 3],
+    ["u24", 3],
+    ["i32", 4],
+    ["u32", 4],
+    ["i48", 6],
+    ["u48", 6],
+    ["i64", 8],
+    ["u64", 8],
+    ["string8", 8],
+    ["u24_version_number", 3],
+    ["u32_version_number", 4],
+    ["u64_unique_id", 8],
+    ["u8_alias", 1],
+    ["crc32", 4],
+    ["buf10", 10],
+    ["list_2d", 0],
+    ["string_null_term", 0],
+    ["unknown_data", 0],
+    ["general_data", 0],
+    ["firmware_page", 0],
+    ["success_response", 0],
+]);

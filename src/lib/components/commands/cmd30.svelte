@@ -10,11 +10,10 @@
 
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
 
-	let position = $state(1);
-	let positionUnit = $state(units.position[0]);
-
-	let duration = $state(1);
-	let timeUnit = $state(units.time[1]);
+	let lowerLimit = $state(-50);
+	let lowerLimitUnit = $state(units.position[0]);
+	let upperLimit = $state(50);
+	let upperLimitUnit = $state(units.position[0]);
 </script>
 
 <div class="mb-5 mt-2 w-full">
@@ -24,19 +23,29 @@
 				Class="mt-5"
 				TooltipText={''}
 				Label={'Position unit'}
-				bind:SelectValue={positionUnit}
+				bind:SelectValue={lowerLimitUnit}
 				Options={units.position}
 			/>
-			<LabeledInput Class="mt-2" TooltipText={''} Label={'Position'} bind:InputValue={position} />
+			<LabeledInput
+				Class="mt-2"
+				TooltipText={''}
+				Label={'Lower limit'}
+				bind:InputValue={lowerLimit}
+			/>
 
 			<LabeledSelect
 				Class="mt-5"
 				TooltipText={''}
-				Label={'Time unit'}
-				bind:SelectValue={timeUnit}
-				Options={units.time}
+				Label={'Position unit'}
+				bind:SelectValue={upperLimitUnit}
+				Options={units.position}
 			/>
-			<LabeledInput Class="mt-2" TooltipText={''} Label={'Duration'} bind:InputValue={duration} />
+			<LabeledInput
+				Class="mt-2"
+				TooltipText={''}
+				Label={'Upper limit'}
+				bind:InputValue={upperLimit}
+			/>
 		</div>
 
 		<button
@@ -46,8 +55,8 @@
 
 				// @ts-ignore
 				M3[cmdFunction]($SelectedAxis, currentCommand, [
-					{ value: position, type: 'position', unit: positionUnit },
-					{ value: duration, type: 'time', unit: timeUnit }
+					{ value: lowerLimit, type: 'position', unit: lowerLimitUnit },
+					{ value: upperLimit, type: 'position', unit: upperLimitUnit }
 				]);
 			}}>{currentCommand.CommandString}</button
 		>
