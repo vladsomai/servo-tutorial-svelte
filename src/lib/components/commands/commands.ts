@@ -3,6 +3,9 @@ import { SerialPortActions } from "$lib/client-server-lib/serial-communication/s
 import type { MotorCommandType } from "$lib/client-server-lib/types";
 import { ConvertAxis, crc32, GetFuncNameFromCmdString, NumberToUint8Arr, ParametersByteCount, sleep, StringToUint8Array, Uint8ArrayToString, type ByteSizes } from "$lib/client-server-lib/utils";
 import { LogError, LogInfo } from "../log-window/state.svelte";
+import ShrtDisableMosfets from "../modal/shortcuts/shrtDisableMosfets.svelte";
+import ShrtEnableMosfets from "../modal/shortcuts/shrtEnableMosfets.svelte";
+import ShrtSystemReset from "../modal/shortcuts/shrtSystemReset.svelte";
 import conversionData from "./unit_conversions_M3.json";
 const conversion_factors = conversionData.conversion_factors;
 const units = conversionData.units
@@ -329,6 +332,13 @@ for (let cmd of mtrCommands) {
 export interface ByteInterpretation {
     Description: string
 }
+
+
+export const CommandsWithShortcuts = new Map<number, any>([
+    [0, ShrtDisableMosfets],
+    [1, ShrtEnableMosfets],
+    [27, ShrtSystemReset],
+]);
 
 //size byte ( 7-bit size, LSB-0)
 //address byte

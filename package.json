@@ -44,6 +44,6 @@
 	"dependencies": {
 		"babylonjs": "^8.23.1",
 		"babylonjs-loaders": "^8.23.1",
-		"daisyui": "^5.0.50"
+		"daisyui": "^5.1.25"
 	}
 }

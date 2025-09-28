@@ -2,10 +2,14 @@
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
 	import CmdNotImplemented from './cmd-not-implemented.svelte';
 	import SelectAxis from '../select-axis.svelte';
-	import { M3 } from './commands';
+	import { CommandsWithShortcuts, M3 } from './commands';
 	import { GetFuncNameFromCmdString } from '$lib/client-server-lib/utils';
 	import { SelectedAxis } from '$lib/stores/global';
-
+	import FeedbackIcon from '$lib/images/icons/envelope-paper.svg';
+	import View3dIcon from '$lib/images/icons/view3d.svg';
+	import InfoIcon from '$lib/images/icons/info-circle-fill.svg';
+	import { Modal, SetModalComponent, SetModalContent } from '../modal/modal.svelte';
+	import Model3d from '../modal/model-3d.svelte';
 	let {
 		data
 	}: { data: { MotorCommands: Map<number, MotorCommandType>; CommandId: string; Theme: string } } =
@@ -15,11 +19,36 @@
 </script>
 
 <div class="flex w-full justify-between">
-	<a href="/" class="btn rounded-full">Home</a>
-	<a href="/products/M1/3D" class="btn rounded-full">M1</a>
-	<a href="/products/M3/3D" class="btn rounded-full">M3</a>
-	<button class="btn rounded-full">Info</button>
-	<a href="/feedback" class="btn rounded-full">Feedback</a>
+	<button
+		class="btn rounded-full px-3 text-black"
+		onclick={() => {
+			SetModalComponent(Model3d);
+			Modal.Dialog?.showModal();
+		}}
+	>
+		<img src={View3dIcon} alt="info" width="25" height="auto" />
+		View 3D</button
+	>
+	{#if currentCommand != null && CommandsWithShortcuts.get(currentCommand?.CommandEnum) != null}
+		<button
+			class="btn m-0 rounded-full px-2"
+			onclick={() => {
+				SetModalContent({
+					Title: '',
+					Image: '',
+					Description: []
+				});
+				SetModalComponent(CommandsWithShortcuts.get(currentCommand?.CommandEnum));
+				Modal.Dialog?.showModal();
+			}}
+		>
+			<img src={InfoIcon} alt="info" width="25" height="auto" />
+		</button>
+	{/if}
+	<a href="/feedback" class="btn rounded-full text-black">
+		<img src={FeedbackIcon} alt="feedback" />
+		Feedback</a
+	>
 </div>
 
 {#if currentCommand != undefined && currentCommand.Description != ''}

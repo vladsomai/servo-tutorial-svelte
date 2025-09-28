@@ -100,13 +100,11 @@
 	});
 </script>
 
-<div
-	class="bg-base-200 mx-auto mt-24 flex h-[70vh] w-[80vw] flex-col items-center justify-center rounded-2xl"
->
-	<div bind:this={loadingDiv} class="flex flex-col items-center justify-center">
+<div class="flex flex-col items-center justify-center rounded-2xl">
+	<div bind:this={loadingDiv} class="flex flex-col items-center justify-center rounded-2xl mt-2 min-h-[500px] absolute">
 		<progress class="progress progress-primary"></progress>
-		<h1 class="mt-5 text-3xl">Loading 3D assets...</h1>
+		<p class="mt-5 text-3xl">Loading 3D assets...</p>
 	</div>
 
-	<canvas class="h-[90%] w-[90%]" bind:this={canvas}></canvas>
+	<canvas class="h-full w-full rounded-2xl" bind:this={canvas}></canvas>
 </div>

@@ -88,14 +88,6 @@
 			<div animate:flip out:fade class="flex flex-col items-center justify-center">
 				<div class="divider"></div>
 				{@render VelocityAcceleration(index)}
-				<button
-					class="btn btn-error mx-auto"
-					onclick={() => {
-						multimoveInputs.splice(index, 1);
-					}}
-				>
-					<img src={DeleteAccVelInp} alt="Delete move" title="Delete move" />
-				</button>
 			</div>
 		{/each}
 		<button
@@ -149,22 +141,31 @@
 </div>
 
 {#snippet VelocityAcceleration(index: number)}
-	<LabeledSelect
-		Label={'Move type'}
-		bind:SelectValue={multimoveInputs[index].is_velocity}
-		Options={[VelocityStr, AccelerationStr]}
-		Onchange={(e: any) => {
-			console.log('Changed type', index, e.target.value);
+	<div class="flex items-center">
+		<LabeledSelect
+			Label={'Move type'}
+			bind:SelectValue={multimoveInputs[index].is_velocity}
+			Options={[VelocityStr, AccelerationStr]}
+			Onchange={(e: any) => {
+				console.log('Changed type', index, e.target.value);
 
-			let defaultUnit = units.velocity[0];
-			if (e.target.value == AccelerationStr) {
-				defaultUnit = units.acceleration[0];
-			}
+				let defaultUnit = units.velocity[0];
+				if (e.target.value == AccelerationStr) {
+					defaultUnit = units.acceleration[0];
+				}
 
-			multimoveInputs[index].value_unit = defaultUnit;
-		}}
-	/>
-
+				multimoveInputs[index].value_unit = defaultUnit;
+			}}
+		/>
+		<button
+			class="btn btn-error mx-auto ml-2"
+			onclick={() => {
+				multimoveInputs.splice(index, 1);
+			}}
+		>
+			<img src={DeleteAccVelInp} alt="Delete move" title="Delete move" />
+		</button>
+	</div>
 	<div class="flex">
 		<div class="my-2 mr-2">
 			<LabeledSelect
