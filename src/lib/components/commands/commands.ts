@@ -1,7 +1,7 @@
 import { browser } from "$app/environment";
 import { SerialPortActions } from "$lib/client-server-lib/serial-communication/serial-comm";
 import type { MotorCommandType } from "$lib/client-server-lib/types";
-import { ConvertAxis, crc32, GetFuncNameFromCmdString, NumberToUint8Arr, ParametersByteCount, sleep, StringToUint8Array, Uint8ArrayToString, type ByteSizes } from "$lib/client-server-lib/utils";
+import { ConvertAxis, crc32, DecToBin, GetFuncNameFromCmdString, GetVersionNumber, LittleEndianToBigEndian, NumberToUint8Arr, ParametersByteCount, sleep, StringToUint8Array, Uint8ArrayToAscii, Uint8ArrayToString, Uint8ArrToNumber, type ByteSizes } from "$lib/client-server-lib/utils";
 import { LogError, LogInfo } from "../log-window/state.svelte";
 import ShrtDisableMosfets from "../modal/shortcuts/shrtDisableMosfets.svelte";
 import ShrtEnableMosfets from "../modal/shortcuts/shrtEnableMosfets.svelte";
@@ -12,13 +12,13 @@ const units = conversionData.units
 
 const DEFAULT_SLEEP = 50
 
-let mtrCommands: MotorCommandType[] = []
+let MotorCommands: MotorCommandType[] = []
 if (browser) {
     const res = await fetch('/motor_commands.json');
-    mtrCommands = await res.json() as MotorCommandType[];
+    MotorCommands = await res.json() as MotorCommandType[];
 }
 
-function ConstructCommand(axisStr: string, commandEnum: number, payload: Uint8Array, crc32Enabled: boolean = true): Uint8Array {
+function ConstructCommand(axisStr: string, commandEnum: number, payload: Uint8Array, crc32Enabled: boolean): Uint8Array {
     let address = ConvertAxis(axisStr)
 
     let addressPart = new Uint8Array(1)
@@ -77,13 +77,12 @@ function ConstructCommand(axisStr: string, commandEnum: number, payload: Uint8Ar
         cmd.set(crcArr, 1 + addressPart.length + 1 + payload.length)
     }
 
-    console.log(Uint8ArrayToString(cmd))
     return cmd;
 }
 
 /** Use for commands where no payload is needed */
 async function ExecuteCommand(axisStr: string, commandEnum: number, payload = new Uint8Array()) {
-    await SerialPortActions.SendDataToSerialPort(ConstructCommand(axisStr, commandEnum, payload))
+    await SerialPortActions.SendDataToSerialPort(ConstructCommand(axisStr, commandEnum, payload, CRC32_ENABLED))
     if (axisStr == "255" && commandEnum != 20) {
         /**Do not log when sending detect devices */
         LogInfo('No response is expected.');
@@ -197,7 +196,6 @@ function GetCommValueFromValueType(value: any, unit: string, type: string, byteS
         return AccelerationToUint8Arr(value, unit)
     }
     else if (type == "number") {
-        console.log(type, value)
         if (typeof value != 'number') {
             throw `Value type is incorrect, expected number but received ${typeof value}`
         }
@@ -306,7 +304,6 @@ async function ExecuteGenericCommand(axisStr: string, command: MotorCommandType,
             throw `Command definition ${command.CommandString} is invalid, expected type to be defined in \"Description\" field for input ${i} (e.g. i32)`
         }
 
-        console.log(noOfBytes)
         const valArr = GetCommValueFromValueType(arg.value, arg.unit, arg.type, noOfBytes)
         inputChunks.push(valArr)
 
@@ -322,17 +319,12 @@ async function ExecuteGenericCommand(axisStr: string, command: MotorCommandType,
     await ExecuteCommand(axisStr, command.CommandEnum, payload);
 }
 
-for (let cmd of mtrCommands) {
+for (let cmd of MotorCommands) {
     const cmdFunction = GetFuncNameFromCmdString(cmd.CommandString)
 
     // @ts-ignore
     M3[cmdFunction] = ExecuteGenericCommand
 }
-
-export interface ByteInterpretation {
-    Description: string
-}
-
 
 export const CommandsWithShortcuts = new Map<number, any>([
     [0, ShrtDisableMosfets],
@@ -346,46 +338,254 @@ export const CommandsWithShortcuts = new Map<number, any>([
 //payload
 //crc32 4 bytes
 
-function GetBasicByteInterpretation(): ByteInterpretation[] {
-    const ret: ByteInterpretation[] = []
+let CRC32_ENABLED = true
 
-    ret.push({ Description: "Packet size" })
-    ret.push({ Description: "Address/Alias" })
-    ret.push({ Description: "Command ID" })
-    ret.push({ Description: "Payload" })
-    ret.push({ Description: "CRC32" })
-
-
-    return ret
-}
-
-class M3_Interpret {
-    static DisableMosfets(): ByteInterpretation[] {
-        return GetBasicByteInterpretation()
-    }
+export interface ByteInterpretation {
+    HexString: string
+    Description: string
 }
 
 export function InterpretCommand(commandStr: string): ByteInterpretation[] {
-    const cmd = StringToUint8Array(commandStr)
-    console.log("Interpret: ", commandStr)
-    console.log(cmd)
+    const packet = StringToUint8Array(commandStr)
 
-    if (cmd[1] == 253) {
-        //CRC32 enabled
-        const crcVal = crc32(cmd.slice(0, cmd.length - 4))
-        const crcArr = NumberToUint8Arr(crcVal, 4)
-
-        const crcHexStr = Uint8ArrayToString(crcArr)
-        const receivedCrcHexStr = cmd.slice(cmd.length - 4, cmd.length)
-        if (crcHexStr == Uint8ArrayToString(receivedCrcHexStr)) {
-            LogInfo("Response CRC32 validation passed!")
-        }
-        else {
-            LogError("Response CRC32 validation failed!")
+    if (IsCommandPacket(packet)) {
+        // Check for inputs
+        return GetInputByteInterpretation(commandStr, packet, CRC32_ENABLED)
+    }
+    else {
+        // Check for outputs
+        RefreshCrc32Enabled(packet)
+        if (CRC32_ENABLED) {
+            IsCrc32Valid(packet)
         }
     }
-
 
     return []
 }
 
+function GetInputByteInterpretation(packetString: string, packet: Uint8Array, crc32Enabled: boolean): ByteInterpretation[] {
+    const packetStringSplit = []
+
+    for (let i = 0; i < packetString.length; i += 2) {
+        packetStringSplit.push(packetString.slice(i, i + 2))
+    }
+
+    const commandId = packet[2]
+    const command = MotorCommands.find((cmd) => cmd.CommandEnum == commandId)
+    if (command == null) {
+        throw `Sent command could not be interpreted because the command id could not be found in the list of commands`
+    }
+
+    /** First byte is the size */
+    const size = packet[0] >> 1
+
+    const result: ByteInterpretation[] = []
+
+    result.push({
+        HexString: packetStringSplit[0],
+        Description: `Size: ${size}`
+    })
+
+    result.push({
+        HexString: packetStringSplit[1],
+        Description: `Alias - decimal: ` + ConvertAxis("0x" + packetStringSplit[1]) + " or ASCII: " + Uint8ArrayToAscii(new Uint8Array([packet[1]]))
+    })
+
+    result.push({
+        HexString: packetStringSplit[2],
+        Description: `Command ID: ${command.CommandString}`
+    })
+
+    if (command.Input != null) {
+        let offset = 3
+        for (const inp of command.Input) {
+            const inpType = inp.Description.slice(0, inp.Description.indexOf(":"))
+            let noOfBytes = (ParametersByteCount.get(inpType) as number)
+
+            if (noOfBytes == 0) {
+                // Dynamic data incoming, read all until end
+                noOfBytes = packet.length - offset
+                if (crc32Enabled) {
+                    noOfBytes -= 4
+                }
+            }
+
+            const hexCollecedStr = packetString.slice(offset * 2, (offset * 2) + (noOfBytes * 2))
+            const hexColleced = packet.slice(offset, offset + noOfBytes)
+
+            offset += noOfBytes
+
+            let dispFormat: string[] = []
+            if (inp.TooltipDisplayFormat != null) {
+                dispFormat = GetDisplayFormat(inp.TooltipDisplayFormat, hexColleced)
+            }
+
+            result.push({
+                HexString: hexCollecedStr,
+                Description: `${inp.Description}` + dispFormat.join("\n")
+            })
+        }
+    }
+
+    if (crc32Enabled) {
+        const receivedCrcHexStr = packetString.slice(packetString.length - 8, packetString.length)
+
+        result.push({
+            HexString: receivedCrcHexStr,
+            Description: "CRC32"
+        })
+    }
+
+    return result
+}
+
+
+/**
+ * Returns a string with the hexString converted to the format 
+ * @param format format string
+ * @param hexString hex number as string to be converted to the specified format
+ */
+function GetDisplayFormat(format: string, arr: Uint8Array, typeWithDescription: string = "") {
+    const formatArr = format.split(',');
+
+    if (typeWithDescription.length) {
+        // version_number
+        const indexOfColumn = typeWithDescription.indexOf(":");
+        const typeStr = typeWithDescription.slice(0, indexOfColumn)
+        if (typeStr.includes("version_number")) {
+            format = '%uvn'
+        }
+    }
+
+    let res = '';
+    const preText = " Result converted to "
+    let convertedTo = '';
+    let result: string[] = []
+    for (format of formatArr) {
+        convertedTo = ''
+        switch (format) {
+            case 'i8':
+                convertedTo += "number: "
+                res = Uint8ArrToNumber(arr, 1).toString()
+                break
+            case 'u8':
+                convertedTo += "number: "
+                res = Uint8ArrToNumber(arr, 1).toString()
+                break
+            case '%c':
+                convertedTo += "char: "
+                res = '\'' + String.fromCharCode(arr[0]) + '\''
+                break
+            case '%s':
+                convertedTo += "string: "
+                res = '\'' + Uint8ArrayToAscii(arr) + '\''
+                break
+            case '%hd':
+                convertedTo += "short: "
+                res = Uint8ArrToNumber(arr, 2).toString()
+                break
+            case '%hu':
+                convertedTo += "unsigned short: "
+                res = Uint8ArrToNumber(arr, 2).toString()
+                break
+            case '%d':
+                convertedTo += "decimal: "
+                res = Uint8ArrToNumber(arr, 4).toString()
+                break
+            case '%u':
+                convertedTo += "unsigned decimal: "
+                res = Uint8ArrToNumber(arr, 4).toString()
+                break
+            case 'i48':
+                convertedTo += "decimal: "
+                res = Uint8ArrToNumber(arr, 6).toString()
+                break
+            case 'u48':
+                convertedTo += "unsigned decimal: "
+                res = Uint8ArrToNumber(arr, 6).toString()
+                break
+            case '%ld':
+                convertedTo += "long: "
+                res = Uint8ArrToNumber(arr, 8).toString()
+                break
+            case '%lu':
+                convertedTo += "unsigned long: "
+                res = Uint8ArrToNumber(arr, 8).toString()
+                break
+            case '%lld':
+                convertedTo += "long long: "
+                res = Uint8ArrToNumber(arr, 8).toString()
+                break
+            case '%llu':
+                convertedTo += "unsigned long long: "
+                res = Uint8ArrToNumber(arr, 8).toString()
+                break
+            case '%b':
+                const num = Uint8ArrToNumber(arr, 4) as number
+                const binaryStr = DecToBin(num)
+                convertedTo += "binary: "
+                res = binaryStr
+                break
+            case '%uvn':
+                convertedTo += "version number: "
+                res = GetVersionNumber(arr)
+                break
+            case '%x':
+                convertedTo += "hexadecimal: "
+                res = '0x' + Uint8ArrayToString(LittleEndianToBigEndian(arr))
+                break
+            default:
+                break
+        }
+
+        result.push(preText + convertedTo + res)
+    }
+
+    return result;
+}
+
+function IsCommandPacket(packet: Uint8Array): boolean {
+
+    const ADDR_BYTE = packet[1];
+
+    if (ADDR_BYTE == 253 || ADDR_BYTE == 252) {
+        //is response packet
+        return false
+    }
+
+    if (ADDR_BYTE < 0 || ADDR_BYTE > 255) {
+        const msg = "Invalid packet, expected the addres byte to range between 0 and 255"
+        LogError(msg)
+        throw msg
+    }
+
+    return true
+}
+
+function RefreshCrc32Enabled(response: Uint8Array): void {
+    if (response[1] == 252) {
+        CRC32_ENABLED = false
+    }
+    else if (response[1] == 253) {
+        CRC32_ENABLED = true
+    }
+    else {
+        throw "RefreshCrc32Enabled is only expected for response commands"
+    }
+
+}
+
+function IsCrc32Valid(response: Uint8Array): boolean {
+    if (response.length < 6) {
+        /** We are expecting atleast 7 bytes because: size(1)+alias(1)+CRC32(4) = 7 bytes minimum length */
+        throw "CRC32 can not be calculated because the packet is not atleast 7 bytes"
+    }
+
+    const crcVal = crc32(response.slice(0, response.length - 4))
+    const crcArr = NumberToUint8Arr(crcVal, 4)
+
+    const crcHexStr = Uint8ArrayToString(crcArr)
+    const receivedCrcHexStr = response.slice(response.length - 4, response.length)
+    return crcHexStr == Uint8ArrayToString(receivedCrcHexStr)
+
+}

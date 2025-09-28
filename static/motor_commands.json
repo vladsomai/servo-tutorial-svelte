@@ -126,7 +126,7 @@
         "Input": [
             {
                 "Description": "u8: Indicates the type of data to capture. Currently 1 to 3 are valid.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "u8",
                 "ParameterName": "captureType"
             },
             {
@@ -136,22 +136,22 @@
             },
             {
                 "Description": "u8: Channels to capture bitmask. The first three bits are valid, which will turn on (0) or turn off (0) that hall sensor channel",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "u8",
                 "ParameterName": "channelsToCaptureBitmask"
             },
             {
                 "Description": "u16: Aquire a sample every this number of time steps. Time steps happen at the update frequency, which can be read with the Get product specs command",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "timeStepsPerSample"
             },
             {
                 "Description": "u16: Number of samples to sum together to make one point to transmit back",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "nSamplesToSum"
             },
             {
                 "Description": "u16: Division factor to apply to the sum of the samples to scale it down before transmitting it so that it fits into the returned data type, which is a 16-bit number per each hall sensor",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "divisionFactor"
             }
         ],
@@ -180,7 +180,7 @@
         "Output": [
             {
                 "Description": "u48: The current absolute time",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "u48",
                 "ParameterName": "currentTime",
                 "UnitConversion": {
                     "Type": "time",
@@ -198,7 +198,7 @@
         "Input": [
             {
                 "Description": "u48: The motor absolute time that the motor should sync to (in microseconds).",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "u48",
                 "ParameterName": "masterTime"
             }
         ],
@@ -210,7 +210,7 @@
             },
             {
                 "Description": "u16: The contents of the RCC-ICSCR register (holds the HSICAL and HSITRIM settings).",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "rccIcscr"
             }
         ],
@@ -224,7 +224,7 @@
         "Output": [
             {
                 "Description": "u8: The number of items in the movement queue. This command will return between 0 and 32. If less than 32, you can add more items to the queue to continue the movements in order without stopping.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "u8",
                 "ParameterName": "queueSize"
             }
         ],
@@ -283,7 +283,7 @@
         "Output": [
             {
                 "Description": "i64: The current position as determined by the hall sensors",
-                "TooltipDisplayFormat": "%d",
+                "TooltipDisplayFormat": "%lld",
                 "ParameterName": "hallSensorPosition",
                 "UnitConversion": {
                     "Type": "position",
@@ -325,7 +325,7 @@
             },
             {
                 "Description": "u8: The fatal error code. If 0 then there is no fatal error. Once a fatal error happens, the motor becomes disabled and cannot do much anymore until reset. You can press the reset button on the motor or you can execute the System reset command to get out of the fatal error state.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "u8",
                 "ParameterName": "fatalErrorCode"
             }
         ],
@@ -400,7 +400,7 @@
             },
             {
                 "Description": "u8_alias: The alias of the device that has this unique ID.",
-                "TooltipDisplayFormat": "%d,%c",
+                "TooltipDisplayFormat": "u8,%c",
                 "ParameterName": "alias"
             }
         ],
@@ -414,7 +414,7 @@
         "Input": [
             {
                 "Description": "u8_alias: The alias (which is a one byte ID) ranging from 0 to 251. It cannot be 252 to 254 because those are reserved. You can set it to 255, which will remove the alias.",
-                "TooltipDisplayFormat": "%d,%c",
+                "TooltipDisplayFormat": "u8,%c",
                 "ParameterName": "alias"
             }
         ],
@@ -434,7 +434,7 @@
             },
             {
                 "Description": "u8: A firmware compatibility code (when doing a firmware upgrade, this must match between the firmware file and the target device).",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "u8",
                 "ParameterName": "firmwareCompatibility"
             },
             {
@@ -500,7 +500,7 @@
             },
             {
                 "Description": "u8: A flag that tells us if we are in the bootloader (=1) or in the reguslar firmware (=0)",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "u8",
                 "ParameterName": "inBootloader"
             }
         ],
@@ -550,7 +550,7 @@
         "Input": [
             {
                 "Description": "u16: The motor current. The units are some arbitrary units and not amps. A value of 150 or 200 is suitable.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "motorCurrent",
                 "UnitConversion": {
                     "Type": "current",
@@ -560,7 +560,7 @@
             },
             {
                 "Description": "u16: The motor regeneration current (while it is braking). This parameter is currently not used for anything.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "regenerationCurrent",
                 "UnitConversion": {
                     "Type": "current",
@@ -579,7 +579,7 @@
         "Input": [
             {
                 "Description": "u8: Specify how many moves are being communicated in this one shot.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "u8",
                 "ParameterName": "moveCount"
             },
             {
@@ -589,7 +589,7 @@
             },
             {
                 "Description": "list_2d: A 2D list in Python format (list of lists). Each item in the list is of type [i32, u32] representing a series of move commands. Each move command specifies the acceleration to move at or the velocity to instantly change to (according to the bits above) and the number of time steps over which this command is to be executed. For example: '[[100, 30000], [-200, 60000]]'. There is a limit of 32 move commands that can be listed in this one multi-move command. Each of the moves takes up one queue spot, so make sure there is enough space in the queue to store all of the commands.",
-                "TooltipDisplayFormat": "",
+                "TooltipDisplayFormat": null,
                 "ParameterName": "moveList",
                 "UnitConversion": {
                     "Type": "mixed_acceleration_velocity_time",
@@ -608,7 +608,7 @@
         "Input": [
             {
                 "Description": "i64: The lower limit in microsteps.",
-                "TooltipDisplayFormat": "%d",
+                "TooltipDisplayFormat": "%lld",
                 "ParameterName": "lowerLimit",
                 "UnitConversion": {
                     "Type": "position",
@@ -618,7 +618,7 @@
             },
             {
                 "Description": "i64: The upper limit in microsteps.",
-                "TooltipDisplayFormat": "%d",
+                "TooltipDisplayFormat": "%lld",
                 "ParameterName": "upperLimit",
                 "UnitConversion": {
                     "Type": "position",
@@ -657,7 +657,7 @@
         "Input": [
             {
                 "Description": "u8: 0 = turn off statistics gathering, 1 = reset statistics and turn on gathering.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "u8",
                 "ParameterName": "control"
             }
         ],
@@ -672,47 +672,47 @@
         "Output": [
             {
                 "Description": "u16: The maximum value of hall sensor 1 encoutered since the last statistics reset.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "maxHall1"
             },
             {
                 "Description": "u16: The maximum value of hall sensor 2 encoutered since the last statistics reset.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "maxHall2"
             },
             {
                 "Description": "u16: The maximum value of hall sensor 3 encoutered since the last statistics reset.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "maxHall3"
             },
             {
                 "Description": "u16: The minimum value of hall sensor 1 encoutered since the last statistics reset.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "minHall1"
             },
             {
                 "Description": "u16: The minimum value of hall sensor 2 encoutered since the last statistics reset.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "minHall2"
             },
             {
                 "Description": "u16: The minimum value of hall sensor 3 encoutered since the last statistics reset.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "minHall3"
             },
             {
                 "Description": "u64: The sum of hall sensor 1 values collected since the last statistics reset.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%llu",
                 "ParameterName": "sumHall1"
             },
             {
                 "Description": "u64: The sum of hall sensor 2 values collected since the last statistics reset.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%llu",
                 "ParameterName": "sumHall2"
             },
             {
                 "Description": "u64: The sum of hall sensor 3 values collected since the last statistics reset.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%llu",
                 "ParameterName": "sumHall3"
             },
             {
@@ -731,7 +731,7 @@
         "Output": [
             {
                 "Description": "i64: The current desired position",
-                "TooltipDisplayFormat": "%d",
+                "TooltipDisplayFormat": "%lld",
                 "ParameterName": "position",
                 "UnitConversion": {
                     "Type": "position",
@@ -763,7 +763,7 @@
         "Input": [
             {
                 "Description": "u8: The test mode to use or trigger",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "u8",
                 "ParameterName": "testMode"
             }
         ],
@@ -778,7 +778,7 @@
         "Output": [
             {
                 "Description": "i64: The commanded position (which may differ from actual)",
-                "TooltipDisplayFormat": "%d",
+                "TooltipDisplayFormat": "%lld",
                 "ParameterName": "commandedPosition",
                 "UnitConversion": {
                     "Type": "position",
@@ -788,7 +788,7 @@
             },
             {
                 "Description": "i64: The hall sensor position (or you could say the actual measured position)",
-                "TooltipDisplayFormat": "%d",
+                "TooltipDisplayFormat": "%lld",
                 "ParameterName": "hallSensorPosition",
                 "UnitConversion": {
                     "Type": "position",
@@ -817,7 +817,7 @@
         "Output": [
             {
                 "Description": "u16: The voltage. Divide this number by 10 to get the actual voltage in volts.",
-                "TooltipDisplayFormat": "%d",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "supplyVoltage",
                 "UnitConversion": {
                     "Type": "voltage",
@@ -864,7 +864,7 @@
         "Input": [
             {
                 "Description": "u8: Vibration level (0 = turn off, 1 = turn on).",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "u8",
                 "ParameterName": "vibrationLevel"
             }
         ],
@@ -887,7 +887,7 @@
         "Output": [
             {
                 "Description": "i16: The temperature in degrees celcius. The accuracy is about +/- 3 degrees celcius and is measured at the motor driver PCB.",
-                "TooltipDisplayFormat": "%d",
+                "TooltipDisplayFormat": "%hd",
                 "ParameterName": "temperature",
                 "UnitConversion": {
                     "Type": "temperature",
@@ -929,7 +929,7 @@
         "Input": [
             {
                 "Description": "i64: The new maximum allowable position deviation setting",
-                "TooltipDisplayFormat": "%d",
+                "TooltipDisplayFormat": "%lld",
                 "ParameterName": "maxAllowablePositionDeviation",
                 "UnitConversion": {
                     "Type": "position",
@@ -994,77 +994,77 @@
             },
             {
                 "Description": "u16: All motor control calculations profiler time",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "allMotorControlCalculationsProfilerTime"
             },
             {
                 "Description": "u16: All motor control calculations profiler maximum time",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "allMotorControlCalculationsProfilerMaxTime"
             },
             {
                 "Description": "u16: Get sensor position profiler time",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "getSensorPositionProfilerTime"
             },
             {
                 "Description": "u16: Get sensor position profiler maximum time",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "getSensorPositionProfilerMaxTime"
             },
             {
                 "Description": "u16: Compute velocity profiler time",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "computeVelocityProfilerTime"
             },
             {
                 "Description": "u16: Compute velocity profiler maximum time",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "computeVelocityProfilerMaxTime"
             },
             {
                 "Description": "u16: Motor movement calculations profiler time",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "motorMovementCalculationsProfilerTime"
             },
             {
                 "Description": "u16: Motor movement calculations profiler maximum time",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "motorMovementCalculationsProfilerMaxTime"
             },
             {
                 "Description": "u16: Motor phase calculations profiler time",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "motorPhaseCalculationsProfilerTime"
             },
             {
                 "Description": "u16: Motor phase calculations profiler maximum time",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "motorPhaseCalculationsProfilerMaxTime"
             },
             {
                 "Description": "u16: Motor control loop period profiler time",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "motorControlLoopPeriodProfilerTime"
             },
             {
                 "Description": "u16: Motor control loop period profiler maximum time",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "motorControlLoopPeriodProfilerMaxTime"
             },
             {
                 "Description": "u16: Hall sensor 1 voltage",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "hallSensor1Voltage"
             },
             {
                 "Description": "u16: Hall sensor 2 voltage",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "hallSensor2Voltage"
             },
             {
                 "Description": "u16: Hall sensor 3 voltage",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hu",
                 "ParameterName": "hallSensor3Voltage"
             },
             {
@@ -1074,7 +1074,7 @@
             },
             {
                 "Description": "u8: Motor phases reversed flag",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "u8",
                 "ParameterName": "motorPhasesReversed"
             },
             {
@@ -1094,7 +1094,7 @@
             },
             {
                 "Description": "u8: Motor PWM voltage",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "u8",
                 "ParameterName": "motorPwmVoltage"
             }
         ],
@@ -1107,7 +1107,7 @@
         "Input": [
             {
                 "Description": "u8: Control value (1 to enable, 0 to disable CRC32 checking)",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "u8",
                 "ParameterName": "enableCrc32"
             }
         ],
@@ -1121,7 +1121,7 @@
         "Input": [
             {
                 "Description": "u8: Reset flag (1 to reset the counter after reading, 0 to just read)",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "u8",
                 "ParameterName": "resetCounter"
             }
         ],

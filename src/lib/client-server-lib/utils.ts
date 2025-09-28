@@ -135,8 +135,6 @@ export const NumberToUint8Arr = (
     size: ByteSizes,
     littleEndian = true
 ): Uint8Array<ArrayBuffer> => {
-
-
     let rawArrBuffer = new ArrayBuffer(size)
     if (size == 6) {
         /**Extend the array buffer so that bigint fits */
@@ -172,6 +170,64 @@ export const NumberToUint8Arr = (
 
     return rawCurrent
 }
+
+export const Uint8ArrToNumber = (
+    arr: Uint8Array,
+    size: ByteSizes,
+    littleEndian = true
+): number | bigint => {
+    if (arr.length !== size) {
+        throw `Invalid Uint8Array length: expected ${size}, got ${arr.length}`;
+    }
+
+    let rawArrBuffer = new ArrayBuffer(size);
+    if (size === 6) {
+        // Extend to 8 bytes for BigInt decoding
+        rawArrBuffer = new ArrayBuffer(8);
+    }
+
+    const view = new DataView(rawArrBuffer);
+
+    // Copy bytes into buffer
+    for (let i = 0; i < size; i++) {
+        view.setUint8(i, arr[i]);
+    }
+
+    switch (size) {
+        case 1:
+            return view.getUint8(0);
+        case 2:
+            return view.getUint16(0, littleEndian);
+        case 4:
+            return view.getUint32(0, littleEndian);
+        case 6:
+            return view.getBigUint64(0, littleEndian);
+        case 8:
+            return view.getBigUint64(0, littleEndian);
+        default:
+            throw `Unsupported byte size when converting Uint8Arr to number: byte size received ${size}`;
+    }
+};
+
+export function Uint8ArrayToAscii(arr: Uint8Array) {
+    return Array.from(arr)
+        .map(byte => String.fromCharCode(byte))
+        .join('');
+}
+
+export function DecToBin(dec: number) {
+    return (dec >>> 0).toString(2);
+}
+
+export function GetVersionNumber(arr: Uint8Array): string {
+    let res = ''
+
+    for (let i = arr.length - 1; i >= 0; i--) {
+        res += arr[i].toString() + '.'
+    }
+    return res.substring(0, res.lastIndexOf('.'))
+}
+
 export const makeCRCTable = () => {
     let c;
     let crcTable = [];
@@ -183,6 +239,10 @@ export const makeCRCTable = () => {
         crcTable[n] = c;
     }
     return crcTable
+}
+
+export function LittleEndianToBigEndian(arr: Uint8Array): Uint8Array {
+    return arr.slice().reverse()
 }
 
 export const crcTable = makeCRCTable();

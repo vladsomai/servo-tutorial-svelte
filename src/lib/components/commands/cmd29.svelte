@@ -42,6 +42,11 @@
 	let multimoveInputs: VelAccInput[] = $state([]);
 
 	function AddNewInputs() {
+		if (multimoveInputs.length > 30) {
+			LogWarning('Reached max no of moves');
+			return;
+		}
+
 		const inp = {
 			is_velocity: VelocityStr,
 
@@ -59,7 +64,6 @@
 	function RemoveAllInputs() {
 		multimoveInputs = [];
 	}
-	$inspect(multimoveInputs);
 </script>
 
 <div class="mb-5 mt-2 w-full">
@@ -70,7 +74,7 @@
 					<div class="font-black">Add new move</div>
 				</div>
 				<button class="btn btn-primary mx-auto" onclick={AddNewInputs}
-					><img src={AddAccVelInp} alt="Add new move" title="Add new move" /></button
+					><img src={AddAccVelInp} alt="Add new move" /></button
 				>
 			</div>
 
@@ -80,7 +84,7 @@
 				</div>
 
 				<button class="btn btn-error mx-auto" onclick={RemoveAllInputs}
-					><img src={ResetAccVelInp} alt="Remove all moves" title="Remove all moves" /></button
+					><img src={ResetAccVelInp} alt="Remove all moves" /></button
 				>
 			</div>
 		</div>
@@ -147,8 +151,6 @@
 			bind:SelectValue={multimoveInputs[index].is_velocity}
 			Options={[VelocityStr, AccelerationStr]}
 			Onchange={(e: any) => {
-				console.log('Changed type', index, e.target.value);
-
 				let defaultUnit = units.velocity[0];
 				if (e.target.value == AccelerationStr) {
 					defaultUnit = units.acceleration[0];
@@ -157,14 +159,21 @@
 				multimoveInputs[index].value_unit = defaultUnit;
 			}}
 		/>
-		<button
-			class="btn btn-error mx-auto ml-2"
-			onclick={() => {
-				multimoveInputs.splice(index, 1);
-			}}
-		>
-			<img src={DeleteAccVelInp} alt="Delete move" title="Delete move" />
-		</button>
+
+		<div class="tooltip ml-5">
+			<div class="tooltip-content w-[200px]">
+				<div class="font-black">Remove this move</div>
+			</div>
+
+			<button
+				class="btn btn-error mx-auto"
+				onclick={() => {
+					multimoveInputs.splice(index, 1);
+				}}
+			>
+				<img src={DeleteAccVelInp} alt="Delete move" />
+			</button>
+		</div>
 	</div>
 	<div class="flex">
 		<div class="my-2 mr-2">

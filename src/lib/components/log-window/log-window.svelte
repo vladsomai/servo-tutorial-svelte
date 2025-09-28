@@ -2,6 +2,7 @@
 	import { SerialPortActions } from '$lib/client-server-lib/serial-communication/serial-comm';
 	import { SerialPortState } from '$lib/client-server-lib/serial-communication/state.svelte';
 	import { SelectedAxis, ShowLogTimestamp } from '$lib/stores/global';
+	import { fly } from 'svelte/transition';
 	import { M3 } from '../commands/commands';
 	import ShowLogTimestampComp from '../show-log-timestamp-comp.svelte';
 	import LogLine from './log-line.svelte';
@@ -59,7 +60,9 @@
 				}}
 			>
 				<summary class="text-[12px] font-semibold">Quick menu</summary>
-				<ul class="menu dropdown-content bg-base-100 rounded-box z-1 mt-4 p-2 shadow-sm">
+				<ul
+					class="menu dropdown-content bg-base-100 rounded-box z-1 mt-4 p-2 shadow-sm"
+				>
 					<li>
 						<button
 							class="btn btn-sm"
@@ -91,7 +94,7 @@
 						</button>
 					</li>
 
-										<li>
+					<li>
 						<button
 							class="btn btn-sm mt-2"
 							onclick={() => {

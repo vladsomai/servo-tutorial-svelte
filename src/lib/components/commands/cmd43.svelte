@@ -15,24 +15,9 @@
 <div class="mb-5 mt-2 w-full">
 	<div class="flex flex-col justify-center">
 		<div class="flex flex-col items-center justify-center">
-			<LabeledInput
-				Class="mt-2"
-				TooltipText={''}
-				Label={'Test mode'}
-				bind:InputValue={proportionalTerm}
-			/>
-			<LabeledInput
-				Class="mt-2"
-				TooltipText={''}
-				Label={'Test mode'}
-				bind:InputValue={integralTerm}
-			/>
-			<LabeledInput
-				Class="mt-2"
-				TooltipText={''}
-				Label={'Test mode'}
-				bind:InputValue={differentialTerm}
-			/>
+			<LabeledInput Class="mt-2" TooltipText={''} Label={'kP'} bind:InputValue={proportionalTerm} />
+			<LabeledInput Class="mt-2" TooltipText={''} Label={'kI'} bind:InputValue={integralTerm} />
+			<LabeledInput Class="mt-2" TooltipText={''} Label={'kD'} bind:InputValue={differentialTerm} />
 		</div>
 
 		<button

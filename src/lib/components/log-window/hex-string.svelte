@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
+	import { fade, fly } from 'svelte/transition';
 	let { hexStr, description, color }: { hexStr: string; description: string; color: string } =
 		$props();
 	let isOpen = $state(false);
@@ -28,7 +29,11 @@
 </details>
 
 {#if isOpen}
-	<div class="bg-base-300 rounded-box fixed z-50 w-[200px] p-2 shadow-sm" style={dropdownStyles}>
+	<div
+		transition:fly
+		class="bg-base-300 rounded-box fixed z-50 p-5 shadow-sm break-words"
+		style={dropdownStyles}
+	>
 		<p>{description}</p>
 	</div>
 {/if}
