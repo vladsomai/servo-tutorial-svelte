@@ -1,9 +1,12 @@
-import { LogCommand, LogError, LogInfo, LogLevelType } from "$lib/components/log-window/state.svelte";
+import { MotorCommands } from "$lib/components/commands/commands";
+import { LogCommand, LogError, LogInfo, LogLevelType, LogWarning, type LogCommandType } from "$lib/components/log-window/state.svelte";
 import { GetCurrentBrowser, sleep, Uint8ArrayToString } from "../utils";
 import { SerialPortState, SetSerialPort, SetSerialPortReader, SetSerialPortWriter } from "./state.svelte";
 
-/** This map will contain the command id as key and the response for that command id */
+/** This map will contain the command id as key and the response for that packet id */
 export const SerialPortQueue: Map<number, Uint8Array> = new Map()
+
+let CommandTimeoutHandle: NodeJS.Timeout | null = null
 
 let disconnectTimeout: NodeJS.Timeout | null = null
 let sendInProgress = false
@@ -91,11 +94,40 @@ export class SerialPortActions {
                 throw "Serial port writer is null while trying to send data"
             }
 
+            while (SerialPortQueue.size != 0) {
+                // wait for the receive thread to clear the queue, 
+                // we can't send async commands because the motor does not return the command id
+                await sleep(50)
+            }
+
             await SerialPortState.SerialPortWriter.write(dataToSend);
 
-            let hexString = Uint8ArrayToString(dataToSend).toUpperCase();
+            let dataToSendStr = Uint8ArrayToString(dataToSend).toUpperCase();
 
-            LogCommand("Sent: 0x" + hexString)
+            const cmdId = dataToSend[2]
+
+            const logCommand: LogCommandType = {
+                Packet: dataToSend,
+                CommandId: cmdId,
+                IsSendCmd: true,
+                Level: LogLevelType.Command,
+                Log: dataToSendStr,
+                Timestamp: ""
+            }
+
+            LogCommand(logCommand);
+
+            if (dataToSend[1] != 255) {
+                //Do not wait for a response when sending to 255
+                SerialPortQueue.set(cmdId, dataToSend)
+
+                CommandTimeoutHandle = setTimeout(() => {
+                    SerialPortQueue.clear()
+                    const command = MotorCommands.find((cmd) => cmd.CommandEnum == dataToSend[2])
+                    LogWarning(`Command \'${command?.CommandString}\' timed out.`)
+                }, 2000);
+            }
+
         } catch (err) {
             LogError(JSON.stringify(err).replaceAll("\"", ""))
             throw err
@@ -147,12 +179,31 @@ export class SerialPortActions {
 
                     break;
                 } else {
-                    const receivedBytes =
-                        Uint8ArrayToString(value);
-                    LogCommand(
-                        "Received: 0x" +
-                        receivedBytes
-                    );
+                    const receivedPacket = value
+
+                    //Glue the current response to the "in progress" command
+                    const sentCmdId = [...SerialPortQueue.keys()][0]
+                    const packetStr =
+                        Uint8ArrayToString(receivedPacket);
+
+                    console.log(packetStr, receivedPacket)
+
+                    if (CommandTimeoutHandle != null) {
+                        clearTimeout(CommandTimeoutHandle)
+                    }
+
+                    const logCommand: LogCommandType = {
+                        Packet: receivedPacket,
+                        CommandId: sentCmdId,
+                        IsSendCmd: false,
+                        Level: LogLevelType.Command,
+                        Log: packetStr,
+                        Timestamp: ""
+                    }
+
+                    LogCommand(logCommand);
+                    SerialPortQueue.clear()
+
                 }
             }
         } catch (err) {

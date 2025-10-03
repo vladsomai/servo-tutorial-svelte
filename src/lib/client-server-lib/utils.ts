@@ -112,13 +112,6 @@ export function ConvertAxis(axisStr: string): number {
         return Number.NaN;
     }
 
-    if (selectedAxis == 253 ||
-        selectedAxis == 252
-    ) {
-        LogError(`Alias ${selectedAxis} is reserved. See protocol spec for more details. Will default to 255.`)
-        throw "Alias is reserved"
-    }
-
     return selectedAxis
 
 }
@@ -209,10 +202,10 @@ export const Uint8ArrToNumber = (
     }
 };
 
-export function Uint8ArrayToAscii(arr: Uint8Array) {
+export function Uint8ArrayToAscii(arr: Uint8Array, separator: string = "") {
     return Array.from(arr)
         .map(byte => String.fromCharCode(byte))
-        .join('');
+        .join(separator);
 }
 
 export function DecToBin(dec: number) {
@@ -220,12 +213,11 @@ export function DecToBin(dec: number) {
 }
 
 export function GetVersionNumber(arr: Uint8Array): string {
-    let res = ''
+    return arr.reverse().map((byte: any): any => { return String(byte) }).join(".")
+}
 
-    for (let i = arr.length - 1; i >= 0; i--) {
-        res += arr[i].toString() + '.'
-    }
-    return res.substring(0, res.lastIndexOf('.'))
+export function GetSerialNumber(arr: Uint8Array): string {
+    return GetVersionNumber(arr)
 }
 
 export const makeCRCTable = () => {

@@ -1,53 +1,53 @@
 <script lang="ts">
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
-	import { fade, fly } from 'svelte/transition';
+	import { fade, fly, slide } from 'svelte/transition';
+	import {
+		computePosition,
+		type ReferenceElement,
+		type FloatingElement,
+		autoPlacement
+	} from '@floating-ui/dom';
+	import { sleep } from '$lib/client-server-lib/utils';
 	let { hexStr, description, color }: { hexStr: string; description: string; color: string } =
 		$props();
 	let isOpen = $state(false);
-	let triggerEl: HTMLElement | null = $state(null);
-	let dropdownStyles = $state('');
+
+	let floatingElem: HTMLElement | null = $state(null);
+	let floatingStyles = $state('');
 </script>
 
-<details
-	class="dropdown ml-1 cursor-pointer"
+<button
+	class={`ml-1 cursor-pointer ${color} break-all`}
 	onmouseleave={() => {
 		isOpen = false;
 	}}
-	bind:open={isOpen}
->
-	<summary
-		class={`${color}`}
-		bind:this={triggerEl}
-		onclick={() => {
-			if (triggerEl == null) {
-				return;
+	onclick={async (e) => {
+		isOpen = true;
+
+		await sleep(30);
+
+		const res = await computePosition(
+			e.target as ReferenceElement,
+			floatingElem as FloatingElement,
+			{
+				middleware: [autoPlacement()]
 			}
-			const rect = triggerEl.getBoundingClientRect();
-			dropdownStyles = `top: ${rect.bottom}px; left: ${rect.left - 200}px;`; //!!!200px is the content width
-		}}>{hexStr}</summary
-	>
-</details>
+		);
+		floatingStyles = `top: ${res.y}px; left: ${res.x}px;`;
+	}}
+>
+	{hexStr}
+</button>
 
 {#if isOpen}
 	<div
-		transition:fly
-		class="bg-base-300 rounded-box fixed z-50 p-5 shadow-sm break-words"
-		style={dropdownStyles}
+		transition:fly={{ y: -30, duration: 500 }}
+		bind:this={floatingElem}
+		class={`bg-base-300 rounded-box fixed left-0 top-0 z-50 w-[300px] break-words p-5 shadow-sm `}
+		style={floatingStyles}
 	>
-		<p>{description}</p>
+		<p>
+			{description}
+		</p>
 	</div>
 {/if}
-
-<style>
-	summary {
-		/* Hide the default marker */
-		list-style: none;
-	}
-
-	/* For Firefox, which sometimes requires a different approach */
-	summary::-webkit-details-marker,
-	summary::marker {
-		display: none;
-		content: '';
-	}
-</style>

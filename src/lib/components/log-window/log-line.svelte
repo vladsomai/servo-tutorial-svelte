@@ -3,14 +3,10 @@
 	import { ShowLogTimestamp } from '$lib/stores/global';
 	import { onMount } from 'svelte';
 	import HexString from './hex-string.svelte';
-	import type { LogType } from './state.svelte';
+	import type { LogCommandType, LogType } from './state.svelte';
 	import { InterpretCommand, type ByteInterpretation } from '../commands/commands';
 
-	let { Log }: { Log: LogType } = $props();
-
-	const indexOf0x = Log.Log.indexOf('0x');
-	const logBeforeHex = Log.Log.slice(0, indexOf0x + 2);
-	const hexString = Log.Log.slice(indexOf0x + 2, Log.Log.length);
+	let { Log }: { Log: LogCommandType } = $props();
 
 	interface ByteInterpretationWithColor extends ByteInterpretation {
 		Color: string;
@@ -26,7 +22,7 @@
 	}
 
 	onMount(() => {
-		const commandInterp = InterpretCommand(hexString);
+		const commandInterp = InterpretCommand(Log);
 
 		const temp: ByteInterpretationWithColor[] = [];
 		for (const part of commandInterp) {
@@ -40,7 +36,14 @@
 <p class="">
 	{#if $ShowLogTimestamp}
 		{Log.Timestamp}|
-	{/if}{logBeforeHex}
+	{/if}
+</p>
+<p class="">
+	{#if Log.IsSendCmd}
+		{'Sent 0x'}
+	{:else}
+		{'Received 0x'}
+	{/if}
 </p>
 {#each logComponents as logComp}
 	<HexString hexStr={logComp.HexString} description={logComp.Description} color={logComp.Color} />

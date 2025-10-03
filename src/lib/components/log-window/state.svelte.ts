@@ -13,6 +13,12 @@ export interface LogType {
     Timestamp: string
 }
 
+export interface LogCommandType extends LogType {
+    Packet: Uint8Array,
+    CommandId: number,
+    IsSendCmd: boolean
+}
+
 export interface LogWindowType {
     Logs: LogType[]
 }
@@ -52,10 +58,13 @@ export function LogError(log: string) {
     addLog(newLog)
 }
 
-export function LogCommand(log: string) {
-    const newLog: LogType = {
-        Log: log,
+export function LogCommand(logCommand: LogCommandType) {
+    const newLog: LogCommandType = {
+        Log: logCommand.Log,
+        Packet: logCommand.Packet,
+        CommandId: logCommand.CommandId,
         Level: LogLevelType.Command,
+        IsSendCmd: logCommand.IsSendCmd,
         Timestamp: ""
     }
     addLog(newLog)

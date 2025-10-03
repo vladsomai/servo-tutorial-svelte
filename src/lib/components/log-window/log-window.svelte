@@ -11,7 +11,6 @@
 
 	$effect(() => {
 		LogWindowLogs.Logs;
-		// const parentEl = document.getElementById('parent-log-window');
 		const parentEl = document.getElementById('log-content-container');
 		if (parentEl == null) {
 			return;

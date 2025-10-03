@@ -3,6 +3,7 @@
 	import { ConvertAxis, GetFuncNameFromCmdString } from '$lib/client-server-lib/utils';
 	import { SelectedAxis } from '$lib/stores/global';
 	import LabeledInput from '../labeled-input.svelte';
+	import { LogError } from '../log-window/state.svelte';
 	import { M3 } from './commands';
 
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
@@ -25,11 +26,18 @@
 		<button
 			class="btn btn-primary btn-sm mx-auto mt-5"
 			onclick={() => {
+				const axValue = ConvertAxis(deviceAlias);
+
+				if (axValue == 253 || axValue == 252) {
+					const msg = `Alias ${axValue} is reserved. See protocol spec for more details.`;
+					LogError(msg);
+				}
+
 				const cmdFunction = GetFuncNameFromCmdString(currentCommand.CommandString);
 
 				// @ts-ignore
 				M3[cmdFunction]($SelectedAxis, currentCommand, [
-					{ value: ConvertAxis(deviceAlias), type: 'number', unit: '' }
+					{ value: axValue, type: 'number', unit: '' }
 				]);
 			}}>{currentCommand.CommandString}</button
 		>

@@ -1,8 +1,8 @@
 import { browser } from "$app/environment";
 import { SerialPortActions } from "$lib/client-server-lib/serial-communication/serial-comm";
 import type { MotorCommandType } from "$lib/client-server-lib/types";
-import { ConvertAxis, crc32, DecToBin, GetFuncNameFromCmdString, GetVersionNumber, LittleEndianToBigEndian, NumberToUint8Arr, ParametersByteCount, sleep, StringToUint8Array, Uint8ArrayToAscii, Uint8ArrayToString, Uint8ArrToNumber, type ByteSizes } from "$lib/client-server-lib/utils";
-import { LogError, LogInfo } from "../log-window/state.svelte";
+import { ConvertAxis, crc32, DecToBin, GetFuncNameFromCmdString, GetSerialNumber, GetVersionNumber, LittleEndianToBigEndian, NumberToUint8Arr, ParametersByteCount, sleep, StringToUint8Array, Uint8ArrayToAscii, Uint8ArrayToString, Uint8ArrToNumber, type ByteSizes } from "$lib/client-server-lib/utils";
+import { LogError, LogInfo, type LogCommandType, type LogType } from "../log-window/state.svelte";
 import ShrtDisableMosfets from "../modal/shortcuts/shrtDisableMosfets.svelte";
 import ShrtEnableMosfets from "../modal/shortcuts/shrtEnableMosfets.svelte";
 import ShrtSystemReset from "../modal/shortcuts/shrtSystemReset.svelte";
@@ -12,7 +12,7 @@ const units = conversionData.units
 
 const DEFAULT_SLEEP = 50
 
-let MotorCommands: MotorCommandType[] = []
+export let MotorCommands: MotorCommandType[] = []
 if (browser) {
     const res = await fetch('/motor_commands.json');
     MotorCommands = await res.json() as MotorCommandType[];
@@ -345,33 +345,34 @@ export interface ByteInterpretation {
     Description: string
 }
 
-export function InterpretCommand(commandStr: string): ByteInterpretation[] {
-    const packet = StringToUint8Array(commandStr)
+export function InterpretCommand(log: LogCommandType): ByteInterpretation[] {
+    const packetStr = log.Log
+    const packet = StringToUint8Array(log.Log)
+    const command = MotorCommands.find((cmd) => cmd.CommandEnum == log.CommandId)
+    if (command == null) {
+        const msg = `Can not interpret command ${log.CommandId} because it was not found in the list of commands`
+        LogError(msg)
+        throw new Error(msg)
+    }
 
     if (IsCommandPacket(packet)) {
         // Check for inputs
-        return GetInputByteInterpretation(commandStr, packet, CRC32_ENABLED)
+        return GetInputByteInterpretation(packetStr, packet, CRC32_ENABLED, command)
     }
     else {
         // Check for outputs
         RefreshCrc32Enabled(packet)
-        if (CRC32_ENABLED) {
-            IsCrc32Valid(packet)
-        }
+        return GetOutputByteInterpretation(packetStr, packet, CRC32_ENABLED, command)
     }
-
-    return []
 }
 
-function GetInputByteInterpretation(packetString: string, packet: Uint8Array, crc32Enabled: boolean): ByteInterpretation[] {
+function GetInputByteInterpretation(packetString: string, packet: Uint8Array, crc32Enabled: boolean, command: MotorCommandType): ByteInterpretation[] {
     const packetStringSplit = []
 
     for (let i = 0; i < packetString.length; i += 2) {
         packetStringSplit.push(packetString.slice(i, i + 2))
     }
 
-    const commandId = packet[2]
-    const command = MotorCommands.find((cmd) => cmd.CommandEnum == commandId)
     if (command == null) {
         throw `Sent command could not be interpreted because the command id could not be found in the list of commands`
     }
@@ -383,7 +384,7 @@ function GetInputByteInterpretation(packetString: string, packet: Uint8Array, cr
 
     result.push({
         HexString: packetStringSplit[0],
-        Description: `Size: ${size}`
+        Description: `Packet size: ${size}`
     })
 
     result.push({
@@ -439,23 +440,101 @@ function GetInputByteInterpretation(packetString: string, packet: Uint8Array, cr
     return result
 }
 
+function GetOutputByteInterpretation(packetString: string, packet: Uint8Array, crc32Enabled: boolean, command: MotorCommandType): ByteInterpretation[] {
+    const packetStringSplit = []
+
+    for (let i = 0; i < packetString.length; i += 2) {
+        packetStringSplit.push(packetString.slice(i, i + 2))
+    }
+
+    /** First byte is the size */
+    const size = packet[0] >> 1
+
+    const result: ByteInterpretation[] = []
+
+    result.push({
+        HexString: packetStringSplit[0],
+        Description: `Packet size: ${size}`
+    })
+
+    result.push({
+        HexString: packetStringSplit[1],
+        Description: `CRC is ${crc32Enabled ? "enabled" : "disabled"}`
+    })
+
+    if (crc32Enabled && packet.length == 6) {
+        //success response - CRC32 enabled
+    }
+    else if (packet.length == 2) {
+        //success response - CRC32 disabled
+    }
+    else {
+
+        result.push({
+            HexString: packetStringSplit[2],
+            Description: `Command ID`
+        })
+
+        if (command.Output != null) {
+            let offset = 3//first 2 bytes are size and alias
+            for (const out of command.Output) {
+                const outType = out.Description.slice(0, out.Description.indexOf(":"))
+                let noOfBytes = (ParametersByteCount.get(outType))
+
+                if (noOfBytes == null) {
+                    const msg = `Output parameter type ${outType} is not supported`
+                    LogError(msg)
+                    throw Error(msg)
+                }
+
+                if (noOfBytes == 0) {
+                    // Dynamic data incoming, read all until end
+                    noOfBytes = packet.length - offset
+                    if (crc32Enabled) {
+                        noOfBytes -= 4
+                    }
+                }
+
+                const hexCollecedStr = packetString.slice(offset * 2, (offset * 2) + (noOfBytes * 2))
+                const hexColleced = packet.slice(offset, offset + noOfBytes)
+
+                offset += noOfBytes
+
+                let dispFormat: string[] = []
+                if (out.TooltipDisplayFormat != null) {
+                    dispFormat = GetDisplayFormat(out.TooltipDisplayFormat, hexColleced)
+                }
+
+                result.push({
+                    HexString: hexCollecedStr,
+                    Description: `${out.Description}` + dispFormat.join("\n")
+                })
+            }
+        }
+    }
+
+    if (crc32Enabled) {
+        const isValid = IsCrc32Valid(packet)
+
+        const receivedCrcHexStr = packetString.slice(packetString.length - 8, packetString.length)
+
+        result.push({
+            HexString: receivedCrcHexStr,
+            Description: `CRC32 is ${isValid ? "valid" : "invalid"}`
+        })
+    }
+
+    return result
+}
+
 
 /**
  * Returns a string with the hexString converted to the format 
  * @param format format string
  * @param hexString hex number as string to be converted to the specified format
  */
-function GetDisplayFormat(format: string, arr: Uint8Array, typeWithDescription: string = "") {
+function GetDisplayFormat(format: string, arr: Uint8Array) {
     const formatArr = format.split(',');
-
-    if (typeWithDescription.length) {
-        // version_number
-        const indexOfColumn = typeWithDescription.indexOf(":");
-        const typeStr = typeWithDescription.slice(0, indexOfColumn)
-        if (typeStr.includes("version_number")) {
-            format = '%uvn'
-        }
-    }
 
     let res = '';
     const preText = " Result converted to "
@@ -526,9 +605,17 @@ function GetDisplayFormat(format: string, arr: Uint8Array, typeWithDescription: 
                 convertedTo += "binary: "
                 res = binaryStr
                 break
-            case '%uvn':
-                convertedTo += "version number: "
+            case '%hwvn':
+                convertedTo += "hardware version number: "
                 res = GetVersionNumber(arr)
+                break
+            case '%hwsn':
+                convertedTo += "hardware serial number: "
+                res = GetSerialNumber(arr)
+                break
+            case '%fwvn':
+                convertedTo += "firmware version number: "
+                res = GetSerialNumber(arr)
                 break
             case '%x':
                 convertedTo += "hexadecimal: "

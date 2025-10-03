@@ -395,7 +395,7 @@
         "Output": [
             {
                 "Description": "u64_unique_id: A unique ID (unique among all devices manufactured). The response is sent after a random delay of between 0 and 1 seconds.",
-                "TooltipDisplayFormat": "",
+                "TooltipDisplayFormat": "%x",
                 "ParameterName": "uniqueId"
             },
             {
@@ -439,12 +439,12 @@
             },
             {
                 "Description": "u24_version_number: The hardware version stored as 3 bytes. The first byte is the patch version, followed by the minor and major versions.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hwvn",
                 "ParameterName": "hardwareVersion"
             },
             {
                 "Description": "u32: The serial number.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%hwsn",
                 "ParameterName": "serialNumber"
             },
             {
@@ -495,11 +495,11 @@
         "Output": [
             {
                 "Description": "u32_version_number: The firmware version stored as 4 bytes. The first byte is the development number, then patch version, followed by the minor and major versions.",
-                "TooltipDisplayFormat": "%u",
+                "TooltipDisplayFormat": "%fwvn",
                 "ParameterName": "firmwareVersion"
             },
             {
-                "Description": "u8: A flag that tells us if we are in the bootloader (=1) or in the reguslar firmware (=0)",
+                "Description": "u8: A flag that tells us if we are in the bootloader (=1) or in the regular firmware (=0)",
                 "TooltipDisplayFormat": "u8",
                 "ParameterName": "inBootloader"
             }
