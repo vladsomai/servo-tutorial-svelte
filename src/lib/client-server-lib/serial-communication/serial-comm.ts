@@ -3,13 +3,11 @@ import { LogCommand, LogError, LogInfo, LogLevelType, LogWarning, type LogComman
 import { GetCurrentBrowser, sleep, Uint8ArrayToString } from "../utils";
 import { SerialPortState, SetSerialPort, SetSerialPortReader, SetSerialPortWriter } from "./state.svelte";
 
-/** This map will contain the command id as key and the response for that packet id */
-export const SerialPortQueue: Map<number, Uint8Array> = new Map()
 
+const SerialPortQueue: Map<number, Uint8Array> = new Map()
 let CommandTimeoutHandle: NodeJS.Timeout | null = null
+let DisconnectTimeout: NodeJS.Timeout | null = null
 
-let disconnectTimeout: NodeJS.Timeout | null = null
-let sendInProgress = false
 export class SerialPortActions {
 
     static async ConnectToSerialPort(BaudRate: number = 230400) {
@@ -80,11 +78,12 @@ export class SerialPortActions {
 
     static async SendDataToSerialPort(dataToSend: Uint8Array) {
 
-        while (sendInProgress) {
+        while (SerialPortQueue.size != 0) {
+            // wait for the receive thread to clear the queue, 
+            // we can't send async commands because the motor does not return the command id
             await sleep(50)
         }
 
-        sendInProgress = true
         try {
             if (SerialPortState.SerialPort == null) {
                 throw "Sending data is not possible, you must connect first!"
@@ -92,12 +91,6 @@ export class SerialPortActions {
 
             if (SerialPortState.SerialPortWriter == null) {
                 throw "Serial port writer is null while trying to send data"
-            }
-
-            while (SerialPortQueue.size != 0) {
-                // wait for the receive thread to clear the queue, 
-                // we can't send async commands because the motor does not return the command id
-                await sleep(50)
             }
 
             await SerialPortState.SerialPortWriter.write(dataToSend);
@@ -133,12 +126,12 @@ export class SerialPortActions {
             throw err
         }
         finally {
-            sendInProgress = false
         }
     }
 
     static async ReadDataFromSerialPort() {
         let receiveLength = 0;
+        let receivedPacket: Uint8Array<ArrayBufferLike> = new Uint8Array()
 
         if (SerialPortState.SerialPort == null) {
             LogError("Serial port is not open")
@@ -172,29 +165,33 @@ export class SerialPortActions {
                     await SerialPortState.SerialPortReader.read();
                 if (done) {
 
-                    if (disconnectTimeout != null) {
-                        clearTimeout(disconnectTimeout)
-                        disconnectTimeout = null
+                    if (DisconnectTimeout != null) {
+                        clearTimeout(DisconnectTimeout)
+                        DisconnectTimeout = null
                     }
 
                     break;
                 } else {
-                    const receivedPacket = value
+                    receivedPacket = new Uint8Array([...receivedPacket, ...value])
+                    receiveLength = receivedPacket[0] >> 1
+                    
+                    if (receivedPacket.length != receiveLength) {
+                        continue
+                    }
 
                     //Glue the current response to the "in progress" command
                     const sentCmdId = [...SerialPortQueue.keys()][0]
                     const packetStr =
                         Uint8ArrayToString(receivedPacket);
 
-                    console.log(packetStr, receivedPacket)
-
                     if (CommandTimeoutHandle != null) {
                         clearTimeout(CommandTimeoutHandle)
+                        CommandTimeoutHandle = null
                     }
 
                     const logCommand: LogCommandType = {
                         Packet: receivedPacket,
-                        CommandId: sentCmdId,
+                        CommandId: Number(sentCmdId),
                         IsSendCmd: false,
                         Level: LogLevelType.Command,
                         Log: packetStr,
@@ -203,6 +200,7 @@ export class SerialPortActions {
 
                     LogCommand(logCommand);
                     SerialPortQueue.clear()
+                    receivedPacket = new Uint8Array()
 
                 }
             }
