@@ -100,7 +100,11 @@ export class SerialPortActions {
 
             let dataToSendStr = Uint8ArrayToString(dataToSend).toUpperCase();
 
-            const cmdId = dataToSend[2]
+            let cmdId = dataToSend[2]
+            if (dataToSend[1] == 254) {
+                //extended addressing
+                cmdId = dataToSend[10]
+            }
 
             const logCommand: LogCommandType = {
                 Packet: dataToSend,
@@ -124,7 +128,9 @@ export class SerialPortActions {
                     }
 
                     SerialPortState.SerialPortQueue.clear()
-                    const command = MotorCommands.find((cmd) => cmd.CommandEnum == dataToSend[2])
+
+
+                    const command = MotorCommands.find((cmd) => cmd.CommandEnum == cmdId)
                     LogWarning(`Command \'${command?.CommandString}\' timed out.`)
                 }, 2000);
             }

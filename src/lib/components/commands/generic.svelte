@@ -2,7 +2,7 @@
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
 	import SelectAxis from '../select-axis.svelte';
 	import { GetFuncNameFromCmdString } from '$lib/client-server-lib/utils';
-	import { SelectedAxis } from '$lib/stores/global';
+	import { SelectedAxis, SelectedUniqueID } from '$lib/stores/global';
 	import { M3 } from './commands';
 	let {
 		data
@@ -13,7 +13,7 @@
 </script>
 
 {#if currentCommand != undefined && currentCommand.Description != ''}
-	<div class="mt-5 flex flex-col text-center">
+	<div class="mt-5 flex flex-col text-center transition-all duration-300">
 		<SelectAxis />
 		{#if currentCommand.Input == null}
 			<button
@@ -21,7 +21,7 @@
 				onclick={() => {
 					const cmdFunction = GetFuncNameFromCmdString(currentCommand.CommandString);
 					// @ts-ignore
-					M3[cmdFunction]($SelectedAxis, currentCommand, []);
+					M3[cmdFunction]($SelectedAxis, $SelectedUniqueID, currentCommand, []);
 				}}>{currentCommand.CommandString}</button
 			>
 		{/if}

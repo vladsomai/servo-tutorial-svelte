@@ -2,12 +2,13 @@
 	import '../global-styles.css';
 	import ThemeSelector from '$lib/components/theme-selector.svelte';
 	import { dev } from '$app/environment';
-	import { SelectedAxis, ShowLogTimestamp } from '$lib/stores/global';
+	import { SelectedAxis, SelectedUniqueID, ShowLogTimestamp } from '$lib/stores/global';
 	import { GetCookie, SupportedCookies, UpdateCookie } from '$lib/client-server-lib/cookies';
 	import { onMount } from 'svelte';
 	import { SupportedThemes } from '$lib/client-server-lib/utils';
 	import { Modal } from '$lib/components/modal/modal.svelte';
 	import { M3 } from '$lib/components/commands/commands';
+	import Toast from '$lib/components/toast/toast.svelte';
 	let { children, data } = $props();
 	let innerWidth = $state(0);
 
@@ -23,22 +24,22 @@
 			/**System Reset shortcut */
 			if (e.key == 'r' && e.ctrlKey) {
 				e.preventDefault();
-				M3.SystemReset($SelectedAxis);
+				M3.SystemReset($SelectedAxis, $SelectedUniqueID);
 			} else if (e.key == 'R' && e.ctrlKey) {
 				e.preventDefault();
-				M3.SystemReset('255');
+				M3.SystemReset('255', $SelectedUniqueID);
 			} else if (e.key == 'e' && e.ctrlKey) {
 				e.preventDefault();
-				M3.EnableMosfets($SelectedAxis);
+				M3.EnableMosfets($SelectedAxis, $SelectedUniqueID);
 			} else if (e.key == 'E' && e.ctrlKey) {
 				e.preventDefault();
-				M3.EnableMosfets('255');
+				M3.EnableMosfets('255', $SelectedUniqueID);
 			} else if (e.key == 'd' && e.ctrlKey) {
 				e.preventDefault();
-				M3.DisableMosfets($SelectedAxis);
+				M3.DisableMosfets($SelectedAxis, $SelectedUniqueID);
 			} else if (e.key == 'D' && e.ctrlKey) {
 				e.preventDefault();
-				M3.DisableMosfets('255');
+				M3.DisableMosfets('255', $SelectedUniqueID);
 			}
 		};
 
@@ -102,6 +103,8 @@
 		<button>close</button>
 	</form>
 </dialog>
+
+<Toast />
 
 <div class="text-base-content/70 tracking-wide">
 	{@render children()}

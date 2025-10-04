@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
 	import { GetFuncNameFromCmdString } from '$lib/client-server-lib/utils';
-	import { SelectedAxis } from '$lib/stores/global';
+	import { SelectedAxis, SelectedUniqueID } from '$lib/stores/global';
 	import LabeledInput from '../labeled-input.svelte';
 	import { M3 } from './commands';
 
@@ -22,7 +22,7 @@
 				const cmdFunction = GetFuncNameFromCmdString(currentCommand.CommandString);
 
 				// @ts-ignore
-				M3[cmdFunction]($SelectedAxis, currentCommand, [
+				M3[cmdFunction]($SelectedAxis, $SelectedUniqueID, currentCommand, [
 					{ value: testMode, type: 'number', unit: '' }
 				]);
 			}}>{currentCommand.CommandString}</button

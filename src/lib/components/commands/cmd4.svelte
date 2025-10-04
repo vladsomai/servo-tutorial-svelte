@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
-	import { SelectedAxis } from '$lib/stores/global';
+	import { SelectedAxis, SelectedUniqueID } from '$lib/stores/global';
 	import { M3 } from './commands';
 	import LabeledInput from '../labeled-input.svelte';
 	import LabeledSelect from '../labeled-select.svelte';
@@ -40,13 +40,13 @@
 			<LabeledInput Class="mt-2" TooltipText={''} Label={'Duration'} bind:InputValue={duration} />
 		</div>
 
-				<button
+		<button
 			class="btn btn-primary btn-sm mx-auto mt-5"
 			onclick={() => {
 				const cmdFunction = GetFuncNameFromCmdString(currentCommand.CommandString);
 
 				// @ts-ignore
-				M3[cmdFunction]($SelectedAxis, currentCommand, [
+				M3[cmdFunction]($SelectedAxis, $SelectedUniqueID, currentCommand, [
 					{ value: position, type: 'position', unit: positionUnit },
 					{ value: duration, type: 'time', unit: timeUnit }
 				]);

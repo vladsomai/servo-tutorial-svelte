@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
 	import { GetFuncNameFromCmdString } from '$lib/client-server-lib/utils';
-	import { SelectedAxis } from '$lib/stores/global';
+	import { SelectedAxis, SelectedUniqueID } from '$lib/stores/global';
 	import LabeledInput from '../labeled-input.svelte';
 	import LabeledSelect from '../labeled-select.svelte';
 	import { LogWarning } from '../log-window/state.svelte';
@@ -31,15 +31,15 @@
 				bind:InputValue={acceleration}
 			/>
 		</div>
-		
+
 		<button
 			class="btn btn-primary btn-sm mx-auto mt-5"
 			onclick={() => {
 				const cmdFunction = GetFuncNameFromCmdString(currentCommand.CommandString);
 
 				// @ts-ignore
-				M3[cmdFunction]($SelectedAxis, currentCommand, [
-					{ value: acceleration, type: 'acceleration', unit: accelerationUnit },
+				M3[cmdFunction]($SelectedAxis, $SelectedUniqueID, currentCommand, [
+					{ value: acceleration, type: 'acceleration', unit: accelerationUnit }
 				]);
 			}}>{currentCommand.CommandString}</button
 		>

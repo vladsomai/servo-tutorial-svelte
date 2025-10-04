@@ -17,41 +17,47 @@ if (browser) {
     MotorCommands = await res.json() as MotorCommandType[];
 }
 
-function ConstructCommand(axisStr: string, commandEnum: number, payload: Uint8Array, crc32Enabled: boolean): Uint8Array {
-    let address = ConvertAxisToNum(axisStr)
+function ConstructCommand(axisStr: string, uniqueId: string, commandEnum: number, payload: Uint8Array, crc32Enabled: boolean): Uint8Array {
+    let alias = ConvertAxisToNum(axisStr)
+
+    if (isNaN(alias)) {
+        const msg = "Axis text could not be converted"
+        LogError(msg)
+        throw new Error(msg)
+    }
+
+    if (alias > 255) {
+        const msg = "Alias must range between 0 and 255"
+        LogError(msg)
+        throw new Error(msg)
+    }
 
     let addressPart = new Uint8Array(1)
-    addressPart.set([address])
-    if (address > 255) {
+    addressPart.set([alias])
+    if (alias == 254) {
         //Extended addressing
         addressPart = new Uint8Array(1 + 8)
         addressPart.set([254], 0)
 
-        const uniqueId = NumberToUint8Arr(address, 8)
-        addressPart.set(uniqueId, 1)
-
-        console.log("Unique ID addressing:", addressPart)
+        const uniqueIdArr = StringToUint8Array(uniqueId)
+        addressPart.set(uniqueIdArr, 1)
     }
 
-    if (address == 253) {
+    if (alias == 253) {
         // CRC32 enabled
         throw "Command with CRC enabled is not implemented"
     }
 
-    if (address == 252) {
+    if (alias == 252) {
         //CRC32 disabled
         throw "Command with CRC disabled is not implemented"
-    }
-
-    if (isNaN(address)) {
-        throw "Axis text could not be converted "
     }
 
     const commandByte = commandEnum
 
     //command size: cmdSize(1byte), address(1byte), commandByte(1byte), payload(n bytes)
     //the LSB must be set to 1, while bits 1-7 represent the actual command size
-    let cmdSize = 1 + 1 + 1 + payload.length
+    let cmdSize = 1 + addressPart.length + 1 + payload.length
     if (crc32Enabled) {
         cmdSize += 4
     }
@@ -80,8 +86,8 @@ function ConstructCommand(axisStr: string, commandEnum: number, payload: Uint8Ar
 }
 
 /** Use for commands where no payload is needed */
-async function ExecuteCommand(axisStr: string, commandEnum: number, payload = new Uint8Array()) {
-    await SerialPortActions.SendDataToSerialPort(ConstructCommand(axisStr, commandEnum, payload, CRC32_ENABLED))
+async function ExecuteCommand(axisStr: string, uniqueId: string, commandEnum: number, payload = new Uint8Array()) {
+    await SerialPortActions.SendDataToSerialPort(ConstructCommand(axisStr, uniqueId, commandEnum, payload, CRC32_ENABLED))
     if (axisStr == "255" && commandEnum != 20) {
         /**Do not log when sending detect devices */
         LogInfo('No response is expected.');
@@ -218,28 +224,28 @@ function GetCommValueFromValueType(value: any, unit: string, type: string, byteS
 }
 
 export class M3 {
-    static async ExecuteCommand(axisStr: string, commandEnum: number) {
-        ExecuteCommand(axisStr, commandEnum)
+    static async ExecuteCommand(axisStr: string, uniqueId: string, commandEnum: number) {
+        ExecuteCommand(axisStr, uniqueId, commandEnum)
     }
 
-    static async DisableMosfets(axisStr: string) {
-        await ExecuteCommand(axisStr, 0);
+    static async DisableMosfets(axisStr: string, uniqueId: string,) {
+        await ExecuteCommand(axisStr, uniqueId, 0);
     }
 
-    static async EnableMosfets(axisStr: string) {
-        await ExecuteCommand(axisStr, 1);
+    static async EnableMosfets(axisStr: string, uniqueId: string,) {
+        await ExecuteCommand(axisStr, uniqueId, 1);
     };
 
-    static async SystemReset(axisStr: string) {
-        await ExecuteCommand(axisStr, 27);
+    static async SystemReset(axisStr: string, uniqueId: string,) {
+        await ExecuteCommand(axisStr, uniqueId, 27);
     };
 
-    static async GetStatus(axisStr: string) {
-        await ExecuteCommand(axisStr, 16);
+    static async GetStatus(axisStr: string, uniqueId: string,) {
+        await ExecuteCommand(axisStr, uniqueId, 16);
     };
 }
 
-async function ExecuteGenericCommand(axisStr: string, command: MotorCommandType, args: any[]) {
+async function ExecuteGenericCommand(axisStr: string, uniqueId: string, command: MotorCommandType, args: any[]) {
     let argsStr = ""
 
     if (args != null) {
@@ -254,7 +260,7 @@ async function ExecuteGenericCommand(axisStr: string, command: MotorCommandType,
 
     if (command.Input == null) {
         // This method does not need any inputs
-        await ExecuteCommand(axisStr, command.CommandEnum, new Uint8Array());
+        await ExecuteCommand(axisStr, uniqueId, command.CommandEnum, new Uint8Array());
         return;
     }
 
@@ -315,7 +321,7 @@ async function ExecuteGenericCommand(axisStr: string, command: MotorCommandType,
         payload.set(chunk, offset)
         offset += chunk.length
     }
-    await ExecuteCommand(axisStr, command.CommandEnum, payload);
+    await ExecuteCommand(axisStr, uniqueId, command.CommandEnum, payload);
 }
 
 for (let cmd of MotorCommands) {
@@ -393,8 +399,19 @@ function GetInputByteInterpretation(packetString: string, packet: Uint8Array, cr
         Description: `Alias - decimal: ` + ConvertAxisToNum("0x" + packetStringSplit[1]) + " or ASCII: " + Uint8ArrayToAscii(new Uint8Array([packet[1]]))
     })
 
+    let cmdIdIdx = 2
+    if (packet[1] == 254) {
+        //extended addressing
+        cmdIdIdx = 10
+    }
+
     result.push({
-        HexString: packetStringSplit[2],
+        HexString: packetStringSplit.slice(2, 10).join(""),
+        Description: `UniqueID`
+    })
+
+    result.push({
+        HexString: packetStringSplit[cmdIdIdx],
         Description: `Command ID: ${command.CommandString}`
     })
 
@@ -471,9 +488,15 @@ function GetOutputByteInterpretation(packetString: string, packet: Uint8Array, c
     }
     else {
 
+        let cmdIdIdx = 2
+        if (packet[1] == 254) {
+            //extended addressing
+            cmdIdIdx = 10
+        }
+
         result.push({
-            HexString: packetStringSplit[2],
-            Description: `Command ID`
+            HexString: packetStringSplit[cmdIdIdx],
+            Description: `Command ID: ${command.CommandString}`
         })
 
         if (command.Output != null) {

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
-	import { SelectedAxis } from '$lib/stores/global';
+	import { SelectedAxis, SelectedUniqueID } from '$lib/stores/global';
 	import { M3 } from './commands';
 	import LabeledInput from '../labeled-input.svelte';
 	import LabeledSelect from '../labeled-select.svelte';
@@ -50,7 +50,7 @@
 				const cmdFunction = GetFuncNameFromCmdString(currentCommand.CommandString);
 
 				// @ts-ignore
-				M3[cmdFunction]($SelectedAxis, currentCommand, [
+				M3[cmdFunction]($SelectedAxis, $SelectedUniqueID, currentCommand, [
 					{ value: acceleration, type: 'acceleration', unit: accelerationUnit },
 					{ value: duration, type: 'time', unit: timeUnit }
 				]);

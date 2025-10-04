@@ -43,3 +43,6 @@ export interface DetectedDeviceType {
     UniqueID: string
     Alias: number
 }
+export enum ToastLevel {
+    Success, Info, Error, Warning
+}

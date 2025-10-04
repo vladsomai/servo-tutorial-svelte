@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { MotorCommandType } from '$lib/client-server-lib/types';
+	import { ToastLevel, type MotorCommandType } from '$lib/client-server-lib/types';
 	import { fade, fly, slide } from 'svelte/transition';
 	import {
 		computePosition,
@@ -9,9 +9,11 @@
 		autoPlacement
 	} from '@floating-ui/dom';
 	import { sleep } from '$lib/client-server-lib/utils';
+	import { AddToast } from '../toast/toast-state.svelte';
 	let { hexStr, description, color }: { hexStr: string; description: string; color: string } =
 		$props();
 	let isOpen = $state(false);
+	let isRightMenuOpen = $state(false);
 	let isMouseOver = $state(false);
 
 	let floatingElem: HTMLElement | null = $state(null);
@@ -23,13 +25,20 @@
 	onmouseleave={() => {
 		isOpen = false;
 		isMouseOver = false;
+		isRightMenuOpen = false;
 	}}
 	onmouseover={(e) => {
 		isMouseOver = true;
 	}}
 	onfocus={() => {}}
-	oncontextmenu={() => {
-		console.log('Right clicked');
+	oncontextmenu={async (e: any) => {
+		e.preventDefault();
+		navigator.clipboard.writeText(hexStr);
+
+		AddToast({
+			Level: ToastLevel.Info,
+			Message: ['Parameter was copied to clipboard!']
+		});
 	}}
 	onclick={async (e) => {
 		isOpen = true;
