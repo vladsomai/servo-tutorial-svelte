@@ -302,7 +302,7 @@
         "Output": [
             {
                 "Description": "u16: A series of flags which are 1 bit each",
-                "Bit descriptions": [
+                "BitDescriptions": [
                     "Bit 0: In the bootloader (if this flag is set then the other flags below will all be 0)",
                     "Bit 1: MOSFETs are enabled",
                     "Bit 2: Motor is in closed loop mode",
@@ -320,7 +320,7 @@
                     "Bit 14: Not used, set to 0",
                     "Bit 15: Not used, set to 0"
                 ],
-                "TooltipDisplayFormat": "%b",
+                "TooltipDisplayFormat": "%bhu",
                 "ParameterName": "statusFlags"
             },
             {

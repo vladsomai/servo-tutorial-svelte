@@ -89,7 +89,7 @@ export function sleep(time_ms: number): Promise<void> {
     })
 }
 
-export function ConvertAxis(axisStr: string): number {
+export function ConvertAxisToNum(axisStr: string): number {
 
     let base = 10;
     if (axisStr.startsWith('0x')) {
@@ -114,6 +114,25 @@ export function ConvertAxis(axisStr: string): number {
 
     return selectedAxis
 
+}
+
+/**
+ * Returns alias as string from a number ranging from 0 to 255
+ * @param Input: e.g. 58 (decimal) 
+ * @param Output: e.g. "X"
+ */
+export function ConvertAxisToStr(axisNum: number): string {
+
+    let aliasResult = ""
+    if (axisNum >= 32 && axisNum <= 126) {
+        // alias is printable ascii 
+        aliasResult = String.fromCharCode(axisNum)
+    }
+    else {
+        aliasResult = String(axisNum)
+    }
+
+    return aliasResult
 }
 
 export function GetCurrentTimestamp() {

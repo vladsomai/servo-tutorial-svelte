@@ -8,7 +8,8 @@ export type MotorCommandType = {
 }
 
 export interface InputOutputObjects {
-    Description: string
+    Description: string,
+    BitDescriptions?: string[],
     TooltipDisplayFormat?: string,
     ParameterName?: string
     UnitConversion?: UnitConversionType
@@ -36,4 +37,9 @@ export const QuickStartChapter: MotorCommandType = {
     Description: "",
     Input: null,
     Output: null
+}
+
+export interface DetectedDeviceType {
+    UniqueID: string
+    Alias: number
 }

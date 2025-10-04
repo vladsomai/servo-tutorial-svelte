@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
-	import { ConvertAxis, GetFuncNameFromCmdString } from '$lib/client-server-lib/utils';
+	import { ConvertAxisToNum, GetFuncNameFromCmdString } from '$lib/client-server-lib/utils';
 	import { SelectedAxis } from '$lib/stores/global';
 	import LabeledInput from '../labeled-input.svelte';
 	import { LogError } from '../log-window/state.svelte';
@@ -26,7 +26,7 @@
 		<button
 			class="btn btn-primary btn-sm mx-auto mt-5"
 			onclick={() => {
-				const axValue = ConvertAxis(deviceAlias);
+				const axValue = ConvertAxisToNum(deviceAlias);
 
 				if (axValue == 253 || axValue == 252) {
 					const msg = `Alias ${axValue} is reserved. See protocol spec for more details.`;

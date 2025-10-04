@@ -1,10 +1,8 @@
 import { MotorCommands } from "$lib/components/commands/commands";
 import { LogCommand, LogError, LogInfo, LogLevelType, LogWarning, type LogCommandType } from "$lib/components/log-window/state.svelte";
 import { GetCurrentBrowser, sleep, Uint8ArrayToString } from "../utils";
-import { SerialPortState, SetSerialPort, SetSerialPortReader, SetSerialPortWriter } from "./state.svelte";
+import { SerialPortState, SetSerialPort, SetSerialPortQueue, SetSerialPortReader, SetSerialPortWriter } from "./state.svelte";
 
-
-const SerialPortQueue: Map<number, Uint8Array> = new Map()
 let CommandTimeoutHandle: NodeJS.Timeout | null = null
 let DisconnectTimeout: NodeJS.Timeout | null = null
 
@@ -49,6 +47,7 @@ export class SerialPortActions {
 
             const writer = SerialPortState.SerialPort.writable?.getWriter();
             SetSerialPortWriter(writer)
+            SetSerialPortQueue(new Map())
 
             SerialPortActions.ReadDataFromSerialPort();
 
@@ -78,7 +77,11 @@ export class SerialPortActions {
 
     static async SendDataToSerialPort(dataToSend: Uint8Array) {
 
-        while (SerialPortQueue.size != 0) {
+        if (SerialPortState.SerialPortQueue == null) {
+            throw Error("SerialPortQueue became null")
+        }
+
+        while (SerialPortState.SerialPortQueue.size != 0) {
             // wait for the receive thread to clear the queue, 
             // we can't send async commands because the motor does not return the command id
             await sleep(50)
@@ -110,12 +113,17 @@ export class SerialPortActions {
 
             LogCommand(logCommand);
 
-            if (dataToSend[1] != 255) {
-                //Do not wait for a response when sending to 255
-                SerialPortQueue.set(cmdId, dataToSend)
+            if (dataToSend[1] != 255 || cmdId == 20) {
+                //Do not wait for a response when sending to 255,
+                //However wait for a response when sending detect devices
+                SerialPortState.SerialPortQueue.set(cmdId, dataToSend)
 
                 CommandTimeoutHandle = setTimeout(() => {
-                    SerialPortQueue.clear()
+                    if (SerialPortState.SerialPortQueue == null) {
+                        throw Error("SerialPortQueue became null")
+                    }
+
+                    SerialPortState.SerialPortQueue.clear()
                     const command = MotorCommands.find((cmd) => cmd.CommandEnum == dataToSend[2])
                     LogWarning(`Command \'${command?.CommandString}\' timed out.`)
                 }, 2000);
@@ -174,13 +182,17 @@ export class SerialPortActions {
                 } else {
                     receivedPacket = new Uint8Array([...receivedPacket, ...value])
                     receiveLength = receivedPacket[0] >> 1
-                    
+
                     if (receivedPacket.length != receiveLength) {
                         continue
                     }
 
+                    if (SerialPortState.SerialPortQueue == null) {
+                        throw Error("SerialPortQueue became null")
+                    }
+
                     //Glue the current response to the "in progress" command
-                    const sentCmdId = [...SerialPortQueue.keys()][0]
+                    const sentCmdId = [...SerialPortState.SerialPortQueue.keys()][0]
                     const packetStr =
                         Uint8ArrayToString(receivedPacket);
 
@@ -188,6 +200,7 @@ export class SerialPortActions {
                         clearTimeout(CommandTimeoutHandle)
                         CommandTimeoutHandle = null
                     }
+
 
                     const logCommand: LogCommandType = {
                         Packet: receivedPacket,
@@ -199,7 +212,7 @@ export class SerialPortActions {
                     }
 
                     LogCommand(logCommand);
-                    SerialPortQueue.clear()
+                    SerialPortState.SerialPortQueue.clear()
                     receivedPacket = new Uint8Array()
 
                 }
@@ -218,6 +231,7 @@ export class SerialPortActions {
             SetSerialPort(null)
             SetSerialPortReader(null)
             SetSerialPortWriter(null)
+            SetSerialPortQueue(null)
 
             LogInfo("Disconnected!");
         }

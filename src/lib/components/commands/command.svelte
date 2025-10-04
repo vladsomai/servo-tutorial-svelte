@@ -1,20 +1,15 @@
 <script lang="ts">
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
 	import CmdNotImplemented from './cmd-not-implemented.svelte';
-	import SelectAxis from '../select-axis.svelte';
 	import { CommandsWithShortcuts, M3 } from './commands';
-	import { GetFuncNameFromCmdString } from '$lib/client-server-lib/utils';
-	import { SelectedAxis } from '$lib/stores/global';
-	import FeedbackIcon from '$lib/images/icons/envelope-paper.svg';
-	import View3dIcon from '$lib/images/icons/view3d.svg';
-	import InfoIcon from '$lib/images/icons/info-circle-fill.svg';
 	import { Modal, SetModalComponent, SetModalContent } from '../modal/modal.svelte';
 	import Model3d from '../modal/model-3d.svelte';
+	import Generic from './generic.svelte';
+	import { fly } from 'svelte/transition';
 	let {
 		data
 	}: { data: { MotorCommands: Map<number, MotorCommandType>; CommandId: string; Theme: string } } =
 		$props();
-
 	let currentCommand = $derived(data.MotorCommands.get(Number(data.CommandId)));
 </script>
 
@@ -46,6 +41,7 @@
 	>
 	{#if currentCommand != null && CommandsWithShortcuts.get(currentCommand?.CommandEnum) != null}
 		<button
+			transition:fly={{ y: -30, duration: 1000 }}
 			aria-labelledby="info"
 			class="btn m-0 rounded-full px-2"
 			onclick={() => {
@@ -54,7 +50,7 @@
 					Image: '',
 					Description: []
 				});
-				SetModalComponent(CommandsWithShortcuts.get(currentCommand?.CommandEnum));
+				SetModalComponent(CommandsWithShortcuts.get(currentCommand.CommandEnum));
 				Modal.Dialog?.showModal();
 			}}
 		>
@@ -139,32 +135,28 @@
 								<li>
 									<p>{output.Description}</p>
 								</li>
+								{#if output.BitDescriptions != null}
+									<ul>
+										{#each output.BitDescriptions as bitdesc}
+											<li>
+												<p>{bitdesc}</p>
+											</li>
+										{/each}
+									</ul>
+								{/if}
 							{/each}
 						</ol>
 					</div>
 				{/if}
 			</div>
 		</div>
-
 		<div class="divider"></div>
-		<div class="mt-5 flex flex-col text-center">
-			<SelectAxis />
-			{#if currentCommand.Input == null}
-				<button
-					class="btn btn-primary btn-sm mx-auto my-5"
-					onclick={() => {
-						const cmdFunction = GetFuncNameFromCmdString(currentCommand.CommandString);
-
-						// @ts-ignore
-						M3[cmdFunction]($SelectedAxis, currentCommand, []);
-					}}>{currentCommand.CommandString}</button
-				>
-			{/if}
-		</div>
+		<Generic {data}></Generic>
 	</div>
 {/if}
+
 {#await import(`./cmd${data.CommandId}.svelte`) then Command}
-	<Command.default {currentCommand}></Command.default>
+	<Command.default {currentCommand} {data}></Command.default>
 {:catch}
 	<!-- A dedicated component is not defined for this currentCommand -->
 

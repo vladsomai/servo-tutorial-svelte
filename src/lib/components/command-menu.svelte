@@ -5,7 +5,7 @@
 	let { data } = $props();
 	const commandGroups = data.MotorCommandsGrouped.size;
 
-	let menuGroupsExpanded: boolean[] = $state(new Array(commandGroups).fill(true));
+	let menuGroupsExpanded: boolean[] = $state(new Array(commandGroups).fill(false));
 
 	let isAtleastOneExpanded: boolean = $derived.by(() => {
 		return menuGroupsExpanded.includes(true);
@@ -17,7 +17,7 @@
 		new Map(data.MotorCommandsGrouped)
 	);
 
-	$effect(() => {
+	function handleSearch() {
 		const tempCmds = new Map();
 		for (const [group, commandsIds] of data.MotorCommandsGrouped) {
 			const filteredCmdPerGroup = commandsIds
@@ -30,10 +30,15 @@
 			tempCmds.set(group, cmdIdsFiltered);
 		}
 		motorCommandsGroupedFiltered = tempCmds;
-	});
+
+		if (searchText.length != 0) {
+			//expand all when search input has some chars
+			menuGroupsExpanded = new Array(commandGroups).fill(true);
+		}
+	}
 </script>
 
-<div class="flex flex-col items-center justify-center pb-10 pt-5">
+<div class="flex flex-col items-center justify-center pb-10 pt-5 px-1">
 	<a href="/" class="mx-auto mb-5" aria-labelledby="Gearotons">
 		<svg
 			width="150"
@@ -103,7 +108,12 @@
 		>
 	</a>
 
-	<input bind:value={searchText} class="input input-sm my-3 w-[140px]" placeholder="Search" />
+	<input
+		bind:value={searchText}
+		oninput={handleSearch}
+		class="input input-sm my-3 w-full"
+		placeholder="Search"
+	/>
 
 	<button
 		title={`${isAtleastOneExpanded ? 'Collapse all' : 'Expand all'}`}

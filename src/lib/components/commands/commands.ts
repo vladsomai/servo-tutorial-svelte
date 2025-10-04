@@ -1,16 +1,15 @@
 import { browser } from "$app/environment";
 import { SerialPortActions } from "$lib/client-server-lib/serial-communication/serial-comm";
 import type { MotorCommandType } from "$lib/client-server-lib/types";
-import { ConvertAxis, crc32, DecToBin, GetFuncNameFromCmdString, GetSerialNumber, GetVersionNumber, LittleEndianToBigEndian, NumberToUint8Arr, ParametersByteCount, sleep, StringToUint8Array, Uint8ArrayToAscii, Uint8ArrayToString, Uint8ArrToNumber, type ByteSizes } from "$lib/client-server-lib/utils";
-import { LogError, LogInfo, type LogCommandType, type LogType } from "../log-window/state.svelte";
+import { ConvertAxisToNum, crc32, DecToBin, GetFuncNameFromCmdString, GetSerialNumber, GetVersionNumber, LittleEndianToBigEndian, NumberToUint8Arr, ParametersByteCount, sleep, StringToUint8Array, Uint8ArrayToAscii, Uint8ArrayToString, Uint8ArrToNumber, type ByteSizes } from "$lib/client-server-lib/utils";
+import { DetectedDevices } from "$lib/stores/global";
+import { LogError, LogInfo, type LogCommandType } from "../log-window/state.svelte";
 import ShrtDisableMosfets from "../modal/shortcuts/shrtDisableMosfets.svelte";
 import ShrtEnableMosfets from "../modal/shortcuts/shrtEnableMosfets.svelte";
 import ShrtSystemReset from "../modal/shortcuts/shrtSystemReset.svelte";
 import conversionData from "./unit_conversions_M3.json";
 const conversion_factors = conversionData.conversion_factors;
 const units = conversionData.units
-
-const DEFAULT_SLEEP = 50
 
 export let MotorCommands: MotorCommandType[] = []
 if (browser) {
@@ -19,7 +18,7 @@ if (browser) {
 }
 
 function ConstructCommand(axisStr: string, commandEnum: number, payload: Uint8Array, crc32Enabled: boolean): Uint8Array {
-    let address = ConvertAxis(axisStr)
+    let address = ConvertAxisToNum(axisStr)
 
     let addressPart = new Uint8Array(1)
     addressPart.set([address])
@@ -343,12 +342,14 @@ let CRC32_ENABLED = true
 export interface ByteInterpretation {
     HexString: string
     Description: string
+    Payload?: any//attach things to pass to the output handler (e.g. Detect devices)
 }
 
 export function InterpretCommand(log: LogCommandType): ByteInterpretation[] {
     const packetStr = log.Log
     const packet = StringToUint8Array(log.Log)
     const command = MotorCommands.find((cmd) => cmd.CommandEnum == log.CommandId)
+
     if (command == null) {
         const msg = `Can not interpret command ${log.CommandId} because it was not found in the list of commands`
         LogError(msg)
@@ -389,7 +390,7 @@ function GetInputByteInterpretation(packetString: string, packet: Uint8Array, cr
 
     result.push({
         HexString: packetStringSplit[1],
-        Description: `Alias - decimal: ` + ConvertAxis("0x" + packetStringSplit[1]) + " or ASCII: " + Uint8ArrayToAscii(new Uint8Array([packet[1]]))
+        Description: `Alias - decimal: ` + ConvertAxisToNum("0x" + packetStringSplit[1]) + " or ASCII: " + Uint8ArrayToAscii(new Uint8Array([packet[1]]))
     })
 
     result.push({
@@ -505,9 +506,11 @@ function GetOutputByteInterpretation(packetString: string, packet: Uint8Array, c
                     dispFormat = GetDisplayFormat(out.TooltipDisplayFormat, hexColleced)
                 }
 
+
+
                 result.push({
                     HexString: hexCollecedStr,
-                    Description: `${out.Description}` + dispFormat.join("\n")
+                    Description: `${out.Description}` + "<br/> <br/>" + dispFormat.join("<br/>")
                 })
             }
         }
@@ -524,9 +527,13 @@ function GetOutputByteInterpretation(packetString: string, packet: Uint8Array, c
         })
     }
 
+    const func = HandleOutputMap.get(command.CommandEnum)
+    if (func != null) {
+        func(result[3].HexString, result[4].HexString)
+    }
+
     return result
 }
-
 
 /**
  * Returns a string with the hexString converted to the format 
@@ -605,6 +612,12 @@ function GetDisplayFormat(format: string, arr: Uint8Array) {
                 convertedTo += "binary: "
                 res = binaryStr
                 break
+            case '%bhu':
+                const num2 = Uint8ArrToNumber(arr, 2) as number
+                const binaryStr2 = DecToBin(num2)
+                convertedTo += "binary: "
+                res = binaryStr2
+                break
             case '%hwvn':
                 convertedTo += "hardware version number: "
                 res = GetVersionNumber(arr)
@@ -664,8 +677,8 @@ function RefreshCrc32Enabled(response: Uint8Array): void {
 
 function IsCrc32Valid(response: Uint8Array): boolean {
     if (response.length < 6) {
-        /** We are expecting atleast 7 bytes because: size(1)+alias(1)+CRC32(4) = 7 bytes minimum length */
-        throw "CRC32 can not be calculated because the packet is not atleast 7 bytes"
+        /** We are expecting atleast 6 bytes because: size(1)+alias(1)+CRC32(4) = 6 bytes minimum length */
+        throw "CRC32 can not be calculated because the packet is not at least 6 bytes"
     }
 
     const crcVal = crc32(response.slice(0, response.length - 4))
@@ -674,5 +687,10 @@ function IsCrc32Valid(response: Uint8Array): boolean {
     const crcHexStr = Uint8ArrayToString(crcArr)
     const receivedCrcHexStr = response.slice(response.length - 4, response.length)
     return crcHexStr == Uint8ArrayToString(receivedCrcHexStr)
+}
 
+const HandleOutputMap = new Map<number, Function>()
+HandleOutputMap.set(20, HandleDetectDevicesResponse)
+function HandleDetectDevicesResponse(uniqueId: string, alias: string) {
+    DetectedDevices.set([{ UniqueID: uniqueId, Alias: parseInt(alias, 16) }])
 }
