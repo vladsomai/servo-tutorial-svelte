@@ -13,19 +13,20 @@
 	let { hexStr, description, color }: { hexStr: string; description: string; color: string } =
 		$props();
 	let isOpen = $state(false);
-	let isRightMenuOpen = $state(false);
 	let isMouseOver = $state(false);
 
 	let floatingElem: HTMLElement | null = $state(null);
 	let floatingStyles = $state('');
 </script>
 
-<button
-	class={`ml-1 cursor-pointer ${color} break-all ${isMouseOver ? 'scale-[97%] transition-all duration-200' : ''}`}
+<div
+	tabindex="0"
+	role="button"
+	class={`inline-block cursor-pointer ${color} wrap-break-word break-all ${isMouseOver ? 'scale-[97%] transition-all duration-200' : ''}`}
+	onkeydown={() => {}}
 	onmouseleave={() => {
 		isOpen = false;
 		isMouseOver = false;
-		isRightMenuOpen = false;
 	}}
 	onmouseover={(e) => {
 		isMouseOver = true;
@@ -56,7 +57,7 @@
 	}}
 >
 	{hexStr}
-</button>
+</div>
 
 {#if isOpen}
 	<div

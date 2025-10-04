@@ -33,12 +33,12 @@
 	});
 </script>
 
-<p class="">
+<p class="inline">
 	{#if $ShowLogTimestamp}
 		{Log.Timestamp}|
 	{/if}
 </p>
-<p class="">
+<p class="inline">
 	{#if Log.IsSendCmd}
 		{'Sent 0x'}
 	{:else}

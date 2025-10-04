@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { SerialPortActions } from '$lib/client-server-lib/serial-communication/serial-comm';
 	import { SerialPortState } from '$lib/client-server-lib/serial-communication/state.svelte';
-	import { SelectedAxis, ShowLogTimestamp } from '$lib/stores/global';
+	import { SelectedAxis, SelectedUniqueID, ShowLogTimestamp } from '$lib/stores/global';
 	import { fly } from 'svelte/transition';
 	import { M3 } from '../commands/commands';
 	import ShowLogTimestampComp from '../show-log-timestamp-comp.svelte';
@@ -59,14 +59,12 @@
 				}}
 			>
 				<summary class="text-[12px] font-semibold">Quick menu</summary>
-				<ul
-					class="menu dropdown-content bg-base-100 rounded-box z-1 mt-4 p-2 shadow-sm"
-				>
+				<ul class="menu dropdown-content bg-base-100 rounded-box z-1 mt-4 p-2 shadow-sm">
 					<li>
 						<button
 							class="btn btn-sm"
 							onclick={() => {
-								M3.EnableMosfets($SelectedAxis);
+								M3.EnableMosfets($SelectedAxis, $SelectedUniqueID);
 							}}
 						>
 							Enable MOSFETS
@@ -76,7 +74,7 @@
 						<button
 							class="btn btn-sm mt-2"
 							onclick={() => {
-								M3.DisableMosfets($SelectedAxis);
+								M3.DisableMosfets($SelectedAxis, $SelectedUniqueID);
 							}}
 						>
 							Disable MOSFETS
@@ -86,7 +84,7 @@
 						<button
 							class="btn btn-sm mt-2"
 							onclick={() => {
-								M3.SystemReset($SelectedAxis);
+								M3.SystemReset($SelectedAxis, $SelectedUniqueID);
 							}}
 						>
 							System reset
@@ -97,7 +95,7 @@
 						<button
 							class="btn btn-sm mt-2"
 							onclick={() => {
-								M3.GetStatus($SelectedAxis);
+								M3.GetStatus($SelectedAxis, $SelectedUniqueID);
 							}}
 						>
 							Get status
@@ -121,7 +119,7 @@
 				<p class="line-number ml-2 mr-1 w-[45px] text-right text-sm opacity-50">
 					{i + 1}
 				</p>
-				<div class="flex w-full flex-wrap">
+				<div class="inline w-full">
 					{#if Log.Level == LogLevelType.Error}
 						<p class="text-error w-full">
 							{#if $ShowLogTimestamp}
