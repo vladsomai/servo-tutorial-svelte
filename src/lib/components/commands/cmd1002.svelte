@@ -23,6 +23,13 @@
 		Theme: data.Theme
 	};
 	const IdentifyProps = { MotorCommands: data.MotorCommands, CommandId: '41', Theme: data.Theme };
+
+	$effect(() => {
+		if ($DetectedDevices.length > 0) {
+			selectedDevice = $DetectedDevices[0];
+			$SelectedAxis = ConvertAxisToStr($DetectedDevices[0].Alias);
+		}
+	});
 </script>
 
 <div class="mt-16 flex flex-col items-center justify-center px-5">
@@ -305,6 +312,9 @@
 				</ul>
 			</div>
 
+			<div class="flex w-full justify-center">
+				<SelectAxis />
+			</div>
 			{#await import(`./cmd21.svelte`) then Command}
 				<Command.default
 					children={{}}

@@ -408,12 +408,12 @@ function GetInputByteInterpretation(packetString: string, packet: Uint8Array, cr
     if (packet[1] == 254) {
         //extended addressing
         cmdIdIdx = 10
-    }
 
-    result.push({
-        HexString: packetStringSplit.slice(2, 10).join(""),
-        Description: `UniqueID`
-    })
+        result.push({
+            HexString: packetStringSplit.slice(2, 10).join(""),
+            Description: `UniqueID`
+        })
+    }
 
     result.push({
         HexString: packetStringSplit[cmdIdIdx],
