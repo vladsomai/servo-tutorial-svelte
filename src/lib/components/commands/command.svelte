@@ -88,7 +88,7 @@
 	>
 </div>
 
-{#if currentCommand != undefined && currentCommand.Description != ''}
+{#if currentCommand != null && currentCommand.Description != ''}
 	<div class="px-5">
 		<div class="mt-10 flex w-full flex-col items-center justify-center">
 			<p class="text-2xl font-bold tracking-wider">{currentCommand.CommandString}</p>
@@ -153,9 +153,9 @@
 				{/if}
 			</div>
 		</div>
-		<div class="divider"></div>
-		<Generic {data}></Generic>
 	</div>
+	<div class="divider"></div>
+	<Generic {data} showCodeSamples={true}></Generic>
 {/if}
 
 {#await import(`./cmd${data.CommandId}.svelte`) then Command}
@@ -173,9 +173,3 @@
 		<CmdNotImplemented {currentCommand} />
 	{/if}
 {/await}
-
-<div class="divider"></div>
-
-{#if currentCommand != null && currentCommand.CommandEnum != 1002 && currentCommand.CommandEnum != 1001}
-	<CodeHighligher {currentCommand} />
-{/if}

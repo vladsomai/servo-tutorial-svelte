@@ -17,6 +17,7 @@
 	let { currentCommand }: { currentCommand: MotorCommandType } = $props();
 	let codeHtmlText = $state('');
 	let codeText = $state('');
+	let lang = $state(CodeHighlightObject.Lang);
 
 	let loadingHighlighter = $state(true);
 	let loadingStarted = false;
@@ -105,6 +106,7 @@
 
 		<div class="mt-3 flex w-full items-end justify-around">
 			<select
+				bind:value={lang}
 				aria-label="select code example language"
 				aria-labelledby="select code example language"
 				class="select select-neutral rounded-b-none rounded-t-2xl border-0"

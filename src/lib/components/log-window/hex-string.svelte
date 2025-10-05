@@ -61,7 +61,9 @@
 
 {#if isOpen}
 	<div
-		transition:fly={{ y: -30, duration: 500 }}
+		aria-details="byte description dropdown"
+		role="tooltip"
+		transition:fly={{ y: -10, duration: 500 }}
 		bind:this={floatingElem}
 		class={`bg-base-300 rounded-box fixed left-0 top-0 z-50 w-[500px] break-words p-5 shadow-sm `}
 		style={floatingStyles}
