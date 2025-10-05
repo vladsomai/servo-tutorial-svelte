@@ -12,7 +12,7 @@ motor_command = 0
 motor_command_length = 0
 
 if platform.system() == 'Windows':
-PORT_PREFIX = '\\\\\\\\.\\\\'
+PORT_PREFIX = '\\\\.\\'
 else:
 PORT_PREFIX = ''
 

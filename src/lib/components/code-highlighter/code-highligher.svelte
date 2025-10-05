@@ -1,23 +1,39 @@
 <script lang="ts">
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
 	import { onMount } from 'svelte';
+	import { SelectedAxis } from '$lib/stores/global';
 	import {
 		CodeHighlightObject,
 		SetCodeHighlighter,
 		SetCodeHighlightLang
 	} from './code-highlighter-state.svelte';
 	import { GlobalTheme } from '$lib/stores/global';
-	import { SupportedLanguages, type SupportedCodeLangs } from '$lib/client-server-lib/utils';
+	import {
+		ConvertAxisToNum,
+		SupportedLanguages,
+		type SupportedCodeLangs
+	} from '$lib/client-server-lib/utils';
+	import { GenericCodeExample } from '$lib/client-server-lib/code-samples-utils/code-utils';
 	let { currentCommand }: { currentCommand: MotorCommandType } = $props();
 	let codeHtmlText = $state('');
 	let codeText = $state('');
 
 	let loadingHighlighter = $state(true);
+	let loadingStarted = false;
 
 	onMount(() => {
 		async function loadHighlighter() {
 			try {
 				if (CodeHighlightObject.Highlighter == null) {
+					if (loadingStarted) {
+						// Protect from calling create twice
+						return;
+					}
+
+					loadingStarted = true;
+
+					console.log('Loading Highlighter');
+
 					//lazy load the highligher
 					const { createHighlighter } = await import('shiki');
 					const highlighter = await createHighlighter({
@@ -41,16 +57,25 @@
 		CodeHighlightObject.Lang;
 		CodeHighlightObject.Highlighter;
 		currentCommand;
+		$SelectedAxis;
 
 		async function updateCode() {
 			if (CodeHighlightObject.Highlighter == null) {
 				return;
 			}
 
-			const res = await fetch(`/code-samples/${CodeHighlightObject.Lang}/generic.txt`);
-			codeText = await res.text();
+			let axis = '00';
+			if ($SelectedAxis.length != 0) {
+				axis = $SelectedAxis;
+			}
+			const modfiedCode = await GenericCodeExample.GetNewCode(
+				ConvertAxisToNum(axis),
+				currentCommand.CommandEnum,
+				CodeHighlightObject.Lang
+			);
 
-			codeHtmlText = CodeHighlightObject.Highlighter.codeToHtml(codeText, {
+			codeText = modfiedCode;
+			codeHtmlText = CodeHighlightObject.Highlighter.codeToHtml(modfiedCode, {
 				lang: CodeHighlightObject.Lang,
 				theme: $GlobalTheme.CodeTheme
 			});
