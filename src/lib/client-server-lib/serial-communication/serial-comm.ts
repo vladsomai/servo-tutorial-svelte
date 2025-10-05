@@ -77,23 +77,24 @@ export class SerialPortActions {
 
     static async SendDataToSerialPort(dataToSend: Uint8Array) {
 
-        if (SerialPortState.SerialPortQueue == null) {
-            throw Error("SerialPortQueue became null")
-        }
-
-        while (SerialPortState.SerialPortQueue.size != 0) {
-            // wait for the receive thread to clear the queue, 
-            // we can't send async commands because the motor does not return the command id
-            await sleep(50)
-        }
-
         try {
+
             if (SerialPortState.SerialPort == null) {
                 throw "Sending data is not possible, you must connect first!"
             }
 
             if (SerialPortState.SerialPortWriter == null) {
                 throw "Serial port writer is null while trying to send data"
+            }
+
+            if (SerialPortState.SerialPortQueue == null) {
+                throw Error("SerialPortQueue became null")
+            }
+
+            while (SerialPortState.SerialPortQueue.size != 0) {
+                // wait for the receive thread to clear the queue, 
+                // we can't send async commands because the motor does not return the command id
+                await sleep(50)
             }
 
             await SerialPortState.SerialPortWriter.write(dataToSend);
@@ -136,7 +137,8 @@ export class SerialPortActions {
             }
 
         } catch (err) {
-            LogError(JSON.stringify(err).replaceAll("\"", ""))
+            console.log()
+            LogError(String(err))
             throw err
         }
         finally {
