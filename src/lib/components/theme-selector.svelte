@@ -9,7 +9,6 @@
 
 	onMount(() => {
 		const cookieTheme = GetCookie(SupportedCookies.Theme);
-		console.log(cookieTheme);
 		const currentTheme = SupportedThemes.find((th) => {
 			if (th.SiteTheme == cookieTheme) {
 				return true;

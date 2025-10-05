@@ -1,19 +1,16 @@
 import type { SupportedCodeLangs } from "$lib/client-server-lib/utils"
-import { createHighlighter, type BundledLanguage, type BundledTheme, type HighlighterGeneric } from "shiki"
+import { type BundledLanguage, type BundledTheme, type HighlighterGeneric } from "shiki"
 
 export interface CodeHighlightType {
     Lang: SupportedCodeLangs,
     CodeText: string,
-    Highligher: HighlighterGeneric<BundledLanguage, BundledTheme>
+    Highlighter: HighlighterGeneric<BundledLanguage, BundledTheme> | null
 }
 
 export const CodeHighlightObject: CodeHighlightType = $state({
     Lang: "javascript",
     CodeText: "",
-    Highligher: await createHighlighter({
-        themes: ['github-dark-dimmed', 'github-light', 'tokyo-night', 'material-theme-ocean'],
-        langs: ['javascript', "c", "python"]
-    })
+    Highlighter: null
 })
 
 export function SetCodeHighlightText(newCodeText: string) {
@@ -24,3 +21,6 @@ export function SetCodeHighlightLang(newLang: SupportedCodeLangs) {
     CodeHighlightObject.Lang = newLang
 }
 
+export function SetCodeHighlighter(highlighter: HighlighterGeneric<BundledLanguage, BundledTheme>) {
+    CodeHighlightObject.Highlighter = highlighter
+}

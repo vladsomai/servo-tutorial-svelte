@@ -1,25 +1,56 @@
 <script lang="ts">
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
 	import { onMount } from 'svelte';
-	import { CodeHighlightObject, SetCodeHighlightLang } from './code-highlighter-state.svelte';
+	import {
+		CodeHighlightObject,
+		SetCodeHighlighter,
+		SetCodeHighlightLang
+	} from './code-highlighter-state.svelte';
 	import { GlobalTheme } from '$lib/stores/global';
 	import { SupportedLanguages, type SupportedCodeLangs } from '$lib/client-server-lib/utils';
-
 	let { currentCommand }: { currentCommand: MotorCommandType } = $props();
 	let codeHtmlText = $state('');
 	let codeText = $state('');
+
+	let loadingHighlighter = $state(true);
+
+	onMount(() => {
+		async function loadHighlighter() {
+			try {
+				if (CodeHighlightObject.Highlighter == null) {
+					//lazy load the highligher
+					const { createHighlighter } = await import('shiki');
+					const highlighter = await createHighlighter({
+						themes: ['github-dark-dimmed', 'github-light', 'tokyo-night', 'material-theme-ocean'],
+						langs: ['javascript', 'c', 'python']
+					});
+
+					SetCodeHighlighter(highlighter);
+				}
+			} finally {
+				loadingHighlighter = false;
+			}
+		}
+
+		loadHighlighter();
+	});
 
 	$effect(() => {
 		$GlobalTheme;
 		CodeHighlightObject.CodeText;
 		CodeHighlightObject.Lang;
+		CodeHighlightObject.Highlighter;
 		currentCommand;
 
 		async function updateCode() {
+			if (CodeHighlightObject.Highlighter == null) {
+				return;
+			}
+
 			const res = await fetch(`/code-samples/${CodeHighlightObject.Lang}/generic.txt`);
 			codeText = await res.text();
 
-			codeHtmlText = CodeHighlightObject.Highligher.codeToHtml(codeText, {
+			codeHtmlText = CodeHighlightObject.Highlighter.codeToHtml(codeText, {
 				lang: CodeHighlightObject.Lang,
 				theme: $GlobalTheme.CodeTheme
 			});
@@ -49,6 +80,8 @@
 
 		<div class="mt-3 flex w-full items-end justify-around">
 			<select
+				aria-label="select code example language"
+				aria-labelledby="select code example language"
 				class="select select-neutral rounded-b-none rounded-t-2xl border-0"
 				onchange={(e: Event) => {
 					const elem = e.target as HTMLSelectElement;
@@ -63,11 +96,20 @@
 	</div>
 
 	<div class="absolute right-[10px] top-[100px]">{@render CopyToClipboard()}</div>
-	{@html codeHtmlText}
+	{#if loadingHighlighter}
+		<div class="skeleton h-full w-full"></div>
+	{:else}
+		{@html codeHtmlText}
+	{/if}
 </div>
 
 {#snippet CopyToClipboard()}
-	<label class="btn btn-ghost btn-circle swap swap-rotate" title="copy to clipboard">
+	<label
+		class="btn btn-ghost btn-circle swap swap-rotate"
+		title="copy to clipboard"
+		aria-label="copy to clipboard"
+		aria-labelledby="copy to clipboard"
+	>
 		<!-- this hidden checkbox controls the state -->
 		<input type="checkbox" onclick={handleCopy} />
 

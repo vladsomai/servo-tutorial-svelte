@@ -174,6 +174,6 @@
 	{/if}
 {/await}
 
-{#if currentCommand != null}
+{#if currentCommand != null && currentCommand.CommandEnum != 1002 && currentCommand.CommandEnum != 1001}
 	<CodeHighligher {currentCommand} />
 {/if}

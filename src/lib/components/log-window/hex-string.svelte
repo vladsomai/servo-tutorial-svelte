@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { ToastLevel, type MotorCommandType } from '$lib/client-server-lib/types';
-	import { fade, fly, slide } from 'svelte/transition';
+	import { ToastLevel } from '$lib/client-server-lib/types';
+	import { fly } from 'svelte/transition';
 	import {
 		computePosition,
 		type ReferenceElement,
