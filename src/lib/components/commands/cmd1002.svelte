@@ -305,8 +305,11 @@
 				</ul>
 			</div>
 
-			{#await import(`./cmd${21}.svelte`) then Command}
-				<Command.default currentCommand={data.MotorCommands.get(21)}></Command.default>
+			{#await import(`./cmd21.svelte`) then Command}
+				<Command.default
+					children={{}}
+					currentCommand={data.MotorCommands.get(21) as MotorCommandType}
+				></Command.default>
 			{:catch}
 				<p>Error mounting set device alias</p>
 			{/await}
@@ -323,8 +326,11 @@
 			<div class="flex w-full justify-center">
 				<SelectAxis />
 			</div>
-			{#await import(`./cmd${31}.svelte`) then Command}
-				<Command.default currentCommand={data.MotorCommands.get(31)}></Command.default>
+			{#await import(`./cmd31.svelte`) then Command}
+				<Command.default
+					children={{}}
+					currentCommand={data.MotorCommands.get(31) as MotorCommandType}
+				></Command.default>
 			{:catch}
 				<p>Error mounting ping command</p>
 			{/await}
@@ -354,8 +360,11 @@
 			<div class="flex w-full justify-center">
 				<SelectAxis />
 			</div>
-			{#await import(`./cmd${2}.svelte`) then Command}
-				<Command.default currentCommand={data.MotorCommands.get(2)}></Command.default>
+			{#await import(`./cmd2.svelte`) then Command}
+				<Command.default
+					children={{}}
+					currentCommand={data.MotorCommands.get(2) as MotorCommandType}
+				></Command.default>
 			{:catch}
 				<p>Error mounting trapezoid command</p>
 			{/await}

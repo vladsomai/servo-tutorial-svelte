@@ -23,7 +23,7 @@
 		</div>
 	{/if}
 	<label class={`input input-sm w-[200px] ${Class}`}>
-		<span class="label w-[100px]">{Label} </span>
+		<span class="label w-[100px] text-base-content opacity-80">{Label} </span>
 		<input bind:value={InputValue} type={Type} placeholder="" class="w-[50px]" />
 	</label>
 </div>

@@ -6,8 +6,8 @@
 
 @plugin "daisyui/theme" {
 	name: 'light';
-	--color-primary: rgba(64,141,18,255);
-	
+	--color-primary: rgba(64, 141, 18, 255);
+
 	/* --color-primary: rgba(114,191,68,255); */
 }
 
@@ -15,23 +15,23 @@
 	name: 'night';
 	default: true;
 	/* --color-primary: rgba(64,141,18,255); */
-	--color-primary: rgba(114,191,68,255);
+	--color-primary: rgba(114, 191, 68, 255);
 }
 
 @plugin "daisyui/theme" {
 	name: 'cupcake';
 	/* --color-primary: rgba(64,141,18,255); */
-	--color-primary: rgba(114,191,68,255);
+	--color-primary: rgba(114, 191, 68, 255);
 }
 
 @plugin "daisyui/theme" {
 	name: 'dark';
-	--color-primary: rgba(64,141,18,255);
+	--color-primary: rgba(64, 141, 18, 255);
 	/* --color-primary: rgba(114,191,68,255); */
 }
 
 @utility btn {
-  @apply rounded-full;
+	@apply rounded-full;
 }
 
 html {
@@ -40,4 +40,23 @@ html {
 	font-weight: 500;
 	font-style: normal;
 	background-color: var(--color-base-300) /* var(--color-base-300) */;
+}
+
+pre.shiki {
+	overflow: auto;
+	padding: 10px;
+	counter-reset: codeblock-line;
+}
+
+.line {
+	counter-increment: codeblock-line;
+}
+
+.line::before {
+	content: counter(codeblock-line);
+	display: inline-block;
+	width: 2em;
+	margin-right: 1em;
+	text-align: right;
+	color: rgba(115, 138, 148, 0.4);
 }

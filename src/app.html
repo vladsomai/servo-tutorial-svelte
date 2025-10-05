@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="light" id="root-html">
+<html lang="en" data-theme="night" id="root-html">
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
@@ -21,7 +21,37 @@
 
 		%sveltekit.head%
 	</head>
+
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>
+
+		<!-- Prevents FOUC by setting the theme on initial page load -->
+		<script fetchpriority="high">
+			(function () {
+				/* Theme cookie is always set by the server */
+				const allCookies = document.cookie.split(';');
+
+				let currentTheme = '';
+				const foundCookie = allCookies.find((cookie) => {
+					const [key, value] = cookie.split('=');
+
+					if (key.trim() == 'Theme') {
+						currentTheme = value;
+						return true;
+					}
+				});
+
+				if (foundCookie == null) {
+					return;
+				}
+
+				const rootElem = document.getElementById('root-html');
+				if (rootElem == null) {
+					return;
+				}
+
+				rootElem.setAttribute('data-theme', currentTheme);
+			})();
+		</script>
 	</body>
 </html>

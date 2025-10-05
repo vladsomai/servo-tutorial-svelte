@@ -5,7 +5,9 @@
 	import { Modal, SetModalComponent, SetModalContent } from '../modal/modal.svelte';
 	import Model3d from '../modal/model-3d.svelte';
 	import Generic from './generic.svelte';
+
 	import { fly } from 'svelte/transition';
+	import CodeHighligher from '../code-highlighter/code-highligher.svelte';
 	let {
 		data
 	}: { data: { MotorCommands: Map<number, MotorCommandType>; CommandId: string; Theme: string } } =
@@ -15,7 +17,7 @@
 
 <div class="flex w-full justify-between">
 	<button
-		class="btn rounded-full px-3"
+		class="btn rounded-2xl px-3"
 		onclick={() => {
 			SetModalComponent(Model3d);
 			Modal.Dialog?.showModal();
@@ -42,7 +44,8 @@
 	{#if currentCommand != null && CommandsWithShortcuts.get(currentCommand?.CommandEnum) != null}
 		<button
 			transition:fly={{ y: -30, duration: 1000 }}
-			aria-labelledby="info"
+			aria-labelledby="Shortcut supported"
+			aria-label="Shortcut supported"
 			class="btn m-0 rounded-full px-2"
 			onclick={() => {
 				SetModalContent({
@@ -68,7 +71,7 @@
 			</svg>
 		</button>
 	{/if}
-	<a href="/feedback" class="btn rounded-full">
+	<a href="/feedback" class="btn rounded-2xl">
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
 			width="18"
@@ -156,15 +159,21 @@
 {/if}
 
 {#await import(`./cmd${data.CommandId}.svelte`) then Command}
-	<Command.default {currentCommand} {data}></Command.default>
+	{#if currentCommand != null}
+		<Command.default {currentCommand} {data}></Command.default>
+	{/if}
 {:catch}
 	<!-- A dedicated component is not defined for this currentCommand -->
 
 	{#if currentCommand == null || (currentCommand != null && currentCommand.Input != null)}
 		<!-- Show command not implemented when: 
-		 1. The current command does not exist
-		 2. The current command exists and needs input but the UI component is not defined  
+		1. The current command does not exist
+		2. The current command exists and needs input but the UI component is not defined  
 		This is because any commands that needs inputs, must have a dedicated page to collect user's input -->
 		<CmdNotImplemented {currentCommand} />
 	{/if}
 {/await}
+
+{#if currentCommand != null}
+	<CodeHighligher {currentCommand} />
+{/if}

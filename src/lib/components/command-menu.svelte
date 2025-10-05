@@ -38,8 +38,8 @@
 	}
 </script>
 
-<div class="flex flex-col items-center justify-center pb-10 pt-5 px-1">
-	<a href="/" class="mx-auto mb-5" aria-labelledby="Gearotons">
+<div class="flex flex-col items-center justify-center px-1 pb-10 pt-5">
+	<a href="/" class="mx-auto mb-5" aria-labelledby="Gearotons logo" aria-label="Gearotons logo">
 		<svg
 			width="150"
 			height="50"
@@ -136,7 +136,7 @@
 		{#each motorCommandsGroupedFiltered as [key, value], index}
 			<li>
 				<details bind:open={menuGroupsExpanded[index]}>
-					<summary class="opacity-50">{key}</summary>
+					<summary class="">{key}</summary>
 					<ul>
 						{#each value as cmdid}
 							<li class="mt-3">

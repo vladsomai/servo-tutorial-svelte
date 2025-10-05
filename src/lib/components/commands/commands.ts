@@ -40,6 +40,11 @@ function ConstructCommand(axisStr: string, uniqueId: string, commandEnum: number
         addressPart.set([254], 0)
 
         const uniqueIdArr = StringToUint8Array(uniqueId)
+        if (uniqueIdArr.length != 8) {
+            const msg = `UniqueID must have 8 bytes, the provided UniqueID has ${uniqueIdArr.length} bytes`
+            LogError(msg)
+            throw new Error(msg)
+        }
         addressPart.set(uniqueIdArr, 1)
     }
 

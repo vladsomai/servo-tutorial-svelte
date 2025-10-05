@@ -5,10 +5,10 @@
 	import { SelectedAxis, SelectedUniqueID, ShowLogTimestamp } from '$lib/stores/global';
 	import { GetCookie, SupportedCookies, UpdateCookie } from '$lib/client-server-lib/cookies';
 	import { onMount } from 'svelte';
-	import { SupportedThemes } from '$lib/client-server-lib/utils';
 	import { Modal } from '$lib/components/modal/modal.svelte';
 	import { M3 } from '$lib/components/commands/commands';
 	import Toast from '$lib/components/toast/toast.svelte';
+
 	let { children, data } = $props();
 	let innerWidth = $state(0);
 
@@ -55,33 +55,6 @@
 <svelte:head>
 	<title>Gearotons</title>
 	<meta name="description" content="Gearotons servo motors" />
-
-	<!-- Prevents FOUC by setting the theme on initial page load -->
-	<script>
-		(function () {
-			const allCookies = document.cookie.split(';');
-
-			let cookieValue = '';
-			const foundCookie = allCookies.find((cookie) => {
-				const [key, value] = cookie.split('=');
-
-				if (key.trim() == 'Theme') {
-					cookieValue = value;
-					return true;
-				}
-			});
-
-			if (foundCookie == null) {
-				return '';
-			}
-
-			const rootElem = document.getElementById('root-html');
-			if (rootElem == null) {
-				return;
-			}
-			rootElem.setAttribute('data-theme', cookieValue);
-		})();
-	</script>
 </svelte:head>
 
 <dialog class="modal m-0 p-0" bind:this={Modal.Dialog}>
@@ -111,7 +84,7 @@
 </div>
 
 <div class="fixed bottom-[50px] right-[50px]">
-	<ThemeSelector IncomingTheme={data.Theme} />
+	<ThemeSelector />
 </div>
 {#if dev}
 	<div

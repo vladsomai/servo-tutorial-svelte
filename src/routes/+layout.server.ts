@@ -1,6 +1,6 @@
 import { SupportedCookies, SupportedCookiesMap } from '$lib/client-server-lib/cookies';
 import { CommandsProtocolChapter, QuickStartChapter, type MotorCommandType } from '$lib/client-server-lib/types';
-import { DefaultTheme } from '$lib/client-server-lib/utils';
+import { SupportedThemes } from '$lib/client-server-lib/utils';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async (props) => {
@@ -25,7 +25,12 @@ export const load: LayoutServerLoad = async (props) => {
     let themeFromCookie = props.cookies.get(themeStr)
 
     if (themeFromCookie == null || themeFromCookie.length == 0) {
-        themeFromCookie = DefaultTheme
+        console.log("First visit, setting theme cookie")
+        themeFromCookie = SupportedThemes[0].SiteTheme
+
+        const currentDate = new Date();
+        currentDate.setFullYear(currentDate.getFullYear() + 1);
+        props.cookies.set(themeStr, themeFromCookie, { path: '/', priority: "high", httpOnly: false, expires: currentDate })
     }
 
     return {

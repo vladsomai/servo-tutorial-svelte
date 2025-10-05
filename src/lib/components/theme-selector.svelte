@@ -1,23 +1,37 @@
 <script lang="ts">
-	import { SupportedCookies, UpdateCookie } from '$lib/client-server-lib/cookies';
-	import { SupportedThemes } from '$lib/client-server-lib/utils';
+	import { GetCookie, SupportedCookies, UpdateCookie } from '$lib/client-server-lib/cookies';
+	import { SupportedThemes, type ThemeType } from '$lib/client-server-lib/utils';
 	import { GlobalTheme } from '$lib/stores/global';
 	import ThemeIcon from '$lib/images/icons/theme-picker.svg';
+	import { onMount } from 'svelte';
 
 	const themeAttribute = 'data-theme';
-	let isOpen = $state(false);
 
-	let { IncomingTheme } = $props();
-	let theme = $state(IncomingTheme);
+	onMount(() => {
+		const cookieTheme = GetCookie(SupportedCookies.Theme);
+		console.log(cookieTheme);
+		const currentTheme = SupportedThemes.find((th) => {
+			if (th.SiteTheme == cookieTheme) {
+				return true;
+			}
+		});
 
-	function handleThemeChange(newTheme: string) {
+		if (currentTheme == null) {
+			return;
+		}
+
+		$GlobalTheme = currentTheme;
+	});
+
+	function handleThemeChange(newTheme: ThemeType) {
 		const rootElem = document.getElementById('root-html');
 		if (rootElem == null) {
 			return;
 		}
+
 		$GlobalTheme = newTheme;
-		rootElem.setAttribute(themeAttribute, newTheme);
-		UpdateCookie(SupportedCookies.Theme, newTheme);
+		rootElem.setAttribute(themeAttribute, newTheme.SiteTheme);
+		UpdateCookie(SupportedCookies.Theme, newTheme.SiteTheme);
 	}
 </script>
 
@@ -29,7 +43,15 @@
 
 	<!-- Main Action button replaces the original button when FAB is open -->
 	<div class="fab-main-action">
-		Choose a theme <button class="btn btn-circle btn-secondary btn-lg"><img src={ThemeIcon} class="rotate-90" alt="Pick a theme" width="40px" height="40px" /></button>
+		Choose a theme <button class="btn btn-circle btn-secondary btn-lg"
+			><img
+				src={ThemeIcon}
+				class="rotate-90"
+				alt="Pick a theme"
+				width="40px"
+				height="40px"
+			/></button
+		>
 	</div>
 
 	{#each SupportedThemes as theme}
@@ -40,7 +62,7 @@
 					handleThemeChange(theme);
 				}}
 			>
-				{theme.charAt(0).toUpperCase() + theme.slice(1)}
+				{theme.SiteTheme.charAt(0).toUpperCase() + theme.SiteTheme.slice(1)}
 			</button>
 		</div>
 	{/each}

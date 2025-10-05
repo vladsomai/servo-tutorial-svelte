@@ -1,12 +1,18 @@
 import { LogError } from "$lib/components/log-window/state.svelte"
 
-export const SupportedThemes = [
-    "light",
-    "night",
-    'cupcake',
-    'dark',
+export interface ThemeType {
+    SiteTheme: string,
+    CodeTheme: string
+}
+export const SupportedThemes: ThemeType[] = [
+    { SiteTheme: "night", CodeTheme: "tokyo-night" },
+    { SiteTheme: "dark", CodeTheme: "github-dark-dimmed" },
+    { SiteTheme: "light", CodeTheme: "github-light" },
+    { SiteTheme: "cupcake", CodeTheme: "github-light" },
 ]
-export const DefaultTheme = SupportedThemes[0]
+
+export type SupportedCodeLangs = "javascript" | "c" | "python"
+export const SupportedLanguages: SupportedCodeLangs[] = ["javascript", "c", "python"]
 
 export const GetCurrentBrowser = (): 'Opera' | 'Edge' | 'Chrome' | 'Safari' | 'Firefox' | 'IE' | 'unknown' => {
     if (
