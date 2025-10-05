@@ -79,13 +79,14 @@
 
 <Toast />
 
-<div class="text-base-content/70 tracking-wide">
+<div class="text-base-content/85 tracking-wide">
 	{@render children()}
 </div>
 
 <div class="fixed bottom-[50px] right-[50px]">
 	<ThemeSelector />
 </div>
+
 {#if dev}
 	<div
 		class="bg-base-300 fixed bottom-[50px] z-[2000] flex h-[50px] w-[100px] flex-col items-center justify-center rounded-2xl"
