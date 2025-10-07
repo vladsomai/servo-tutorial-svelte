@@ -1,3 +1,4 @@
+import type { StatusErrorCodesType } from "$lib/client-server-lib/types";
 import GenericModal from "./generic-modal.svelte";
 
 export interface ModalContentType {
@@ -9,10 +10,16 @@ export interface ModalContentType {
 export interface ModalType {
     Component: any
     Dialog: HTMLDialogElement | null
-    Content: ModalContentType
+    Content: ModalContentType,
+    StatusErrorCode: StatusErrorCodesType | null
 }
 
-export const Modal: ModalType = $state({ Component: GenericModal, Dialog: null, Content: { Title: "", Image: "", Description: [] } })
+export const Modal: ModalType = $state({
+    Component: GenericModal,
+    Dialog: null,
+    Content: { Title: "", Image: "", Description: [] },
+    StatusErrorCode: null
+})
 
 export function SetModalComponent(newModalComp: any) {
     Modal.Component = newModalComp
@@ -24,4 +31,8 @@ export function SetModalDialog(htmlElement: HTMLDialogElement) {
 
 export function SetModalContent(content: ModalContentType) {
     Modal.Content = content
+}
+
+export function SetModalTroubleshootError(err: StatusErrorCodesType) {
+    Modal.StatusErrorCode = err
 }

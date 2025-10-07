@@ -2,17 +2,28 @@
 	import '../global-styles.css';
 	import ThemeSelector from '$lib/components/theme-selector.svelte';
 	import { dev } from '$app/environment';
-	import { SelectedAxis, SelectedUniqueID, ShowLogTimestamp } from '$lib/stores/global';
-	import { GetCookie, SupportedCookies, UpdateCookie } from '$lib/client-server-lib/cookies';
+	import {
+		DetectedDevices,
+		SelectedAxis,
+		SelectedUniqueID,
+		ShowLogTimestamp
+	} from '$lib/stores/global';
+	import { GetCookie, SupportedCookies } from '$lib/client-server-lib/cookies';
 	import { onMount } from 'svelte';
 	import { Modal } from '$lib/components/modal/modal.svelte';
-	import { M3 } from '$lib/components/commands/commands';
+	import { HandleOutputMap, M3 } from '$lib/components/commands/commands';
 	import Toast from '$lib/components/toast/toast.svelte';
 
 	let { children, data } = $props();
+
 	let innerWidth = $state(0);
 
 	onMount(() => {
+		function HandleDetectDevicesResponse(uniqueId: string, alias: string) {
+			$DetectedDevices = [{ UniqueID: uniqueId, Alias: parseInt(alias, 16) }];
+		}
+		HandleOutputMap.set(20, HandleDetectDevicesResponse);
+		
 		const showTimestampStr = GetCookie(SupportedCookies.ShowLogTimestamp);
 		if (showTimestampStr != null) {
 			const showTimestamp = showTimestampStr.toLowerCase() === 'true';

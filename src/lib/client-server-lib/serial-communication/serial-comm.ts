@@ -1,5 +1,6 @@
-import { MotorCommands } from "$lib/components/commands/commands";
-import { LogCommand, LogError, LogInfo, LogLevelType, LogWarning, type LogCommandType } from "$lib/components/log-window/state.svelte";
+import { LogCommand, LogError, LogInfo, LogWarning} from "$lib/components/log-window/state.svelte";
+import { GlobalMotorCommandsMap } from "../../../hooks.client";
+import { LogLevelType, type LogCommandType } from "../types";
 import { GetCurrentBrowser, sleep, Uint8ArrayToString } from "../utils";
 import { SerialPortState, SetSerialPort, SetSerialPortQueue, SetSerialPortReader, SetSerialPortWriter } from "./state.svelte";
 
@@ -129,15 +130,13 @@ export class SerialPortActions {
                     }
 
                     SerialPortState.SerialPortQueue.clear()
-
-
-                    const command = MotorCommands.find((cmd) => cmd.CommandEnum == cmdId)
+                    
+                    const command = GlobalMotorCommandsMap.get(cmdId)
                     LogWarning(`Command \'${command?.CommandString}\' timed out.`)
                 }, 2000);
             }
 
         } catch (err) {
-            console.log()
             LogError(String(err))
             throw err
         }

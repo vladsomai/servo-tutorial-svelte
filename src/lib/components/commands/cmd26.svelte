@@ -4,17 +4,15 @@
 	import { SelectedAxis, SelectedUniqueID } from '$lib/stores/global';
 	import LabeledInput from '../labeled-input.svelte';
 	import LabeledSelect from '../labeled-select.svelte';
-	import { LogWarning } from '../log-window/state.svelte';
 	import { M3 } from './commands';
-	import conversionData from './unit_conversions_M3.json';
-	const units = conversionData.units;
-
+	import { GlobalConversionTypes } from '../../../hooks.client';
+	
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
 	let velocity = $state(3);
 	let duration = $state(5);
 
-	let velocityUnit = $state(units.velocity[0]);
-	let timeUnit = $state(units.time[1]);
+	let velocityUnit = $state(GlobalConversionTypes.units.velocity[0]);
+	let timeUnit = $state(GlobalConversionTypes.units.time[1]);
 </script>
 
 <div class="mb-5 mt-2 w-full">
@@ -25,7 +23,7 @@
 				TooltipText={''}
 				Label={'Velocity unit'}
 				bind:SelectValue={velocityUnit}
-				Options={units.velocity}
+				Options={GlobalConversionTypes.units.velocity}
 			/>
 			<LabeledInput Class="mt-2" TooltipText={''} Label={'Velocity'} bind:InputValue={velocity} />
 
@@ -34,7 +32,7 @@
 				TooltipText={''}
 				Label={'Time unit'}
 				bind:SelectValue={timeUnit}
-				Options={units.time}
+				Options={GlobalConversionTypes.units.time}
 			/>
 			<LabeledInput Class="mt-2" TooltipText={''} Label={'Duration'} bind:InputValue={duration} />
 		</div>

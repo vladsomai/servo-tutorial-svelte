@@ -1,13 +1,18 @@
 <script lang="ts">
 	import { SerialPortActions } from '$lib/client-server-lib/serial-communication/serial-comm';
 	import { SerialPortState } from '$lib/client-server-lib/serial-communication/state.svelte';
+	import { LogLevelType, type StatusErrorCodesType } from '$lib/client-server-lib/types';
 	import { SelectedAxis, SelectedUniqueID, ShowLogTimestamp } from '$lib/stores/global';
-	import { fly } from 'svelte/transition';
 	import { M3 } from '../commands/commands';
+	import {
+		Modal,
+		SetModalComponent,
+		SetModalTroubleshootError
+	} from '../modal/modal.svelte';
 	import ShowLogTimestampComp from '../show-log-timestamp-comp.svelte';
 	import LogLine from './log-line.svelte';
-	import { LogLevelType, LogWindowLogs, ClearLogs } from './state.svelte';
-	let { data } = $props();
+	import { LogWindowLogs, ClearLogs } from './state.svelte';
+	import Troubleshoot from '../modal/troubleshoot.svelte';
 
 	$effect(() => {
 		LogWindowLogs.Logs;
@@ -126,12 +131,18 @@
 								{Log.Timestamp}|
 							{/if}
 							{Log.Log}
+							{#if Log.TroubleshootError != null}
+								{@render TroubleshootButton(Log.TroubleshootError)}
+							{/if}
 						</p>
 					{:else if Log.Level == LogLevelType.Warning}
 						<p class="text-warning w-full">
 							{#if $ShowLogTimestamp}
 								{Log.Timestamp}|
 							{/if}{Log.Log}
+							{#if Log.TroubleshootError != null}
+								{@render TroubleshootButton(Log.TroubleshootError)}
+							{/if}
 						</p>
 					{:else if Log.Level == LogLevelType.Command}
 						<LogLine {Log} />
@@ -156,6 +167,19 @@
 		}}
 	>
 		{btnName}
+	</button>
+{/snippet}
+
+{#snippet TroubleshootButton(err: StatusErrorCodesType)}
+	<button
+		class={`link text-warning`}
+		onclick={() => {
+			SetModalTroubleshootError(err);
+			SetModalComponent(Troubleshoot);
+			Modal.Dialog?.showModal();
+		}}
+	>
+		Troubleshoot
 	</button>
 {/snippet}
 

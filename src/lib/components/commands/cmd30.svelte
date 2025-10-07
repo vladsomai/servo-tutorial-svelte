@@ -5,15 +5,14 @@
 	import LabeledInput from '../labeled-input.svelte';
 	import LabeledSelect from '../labeled-select.svelte';
 	import { M3 } from './commands';
-	import conversionData from './unit_conversions_M3.json';
-	const units = conversionData.units;
-
+	import { GlobalConversionTypes } from '../../../hooks.client';
+	
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
 
 	let lowerLimit = $state(-50);
-	let lowerLimitUnit = $state(units.position[0]);
+	let lowerLimitUnit = $state(GlobalConversionTypes.units.position[0]);
 	let upperLimit = $state(50);
-	let upperLimitUnit = $state(units.position[0]);
+	let upperLimitUnit = $state(GlobalConversionTypes.units.position[0]);
 </script>
 
 <div class="mb-5 mt-2 w-full">
@@ -24,7 +23,7 @@
 				TooltipText={''}
 				Label={'Position unit'}
 				bind:SelectValue={lowerLimitUnit}
-				Options={units.position}
+				Options={GlobalConversionTypes.units.position}
 			/>
 			<LabeledInput
 				Class="mt-2"
@@ -38,7 +37,7 @@
 				TooltipText={''}
 				Label={'Position unit'}
 				bind:SelectValue={upperLimitUnit}
-				Options={units.position}
+				Options={GlobalConversionTypes.units.position}
 			/>
 			<LabeledInput
 				Class="mt-2"

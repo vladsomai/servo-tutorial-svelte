@@ -4,10 +4,7 @@
 	import { SelectedAxis, SelectedUniqueID } from '$lib/stores/global';
 	import { onMount } from 'svelte';
 	import LabeledInput from '../labeled-input.svelte';
-	import LabeledSelect from '../labeled-select.svelte';
 	import { M3 } from './commands';
-	import conversionData from './unit_conversions_M3.json';
-	const units = conversionData.units;
 
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
 

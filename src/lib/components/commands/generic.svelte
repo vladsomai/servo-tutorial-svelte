@@ -5,15 +5,16 @@
 	import { SelectedAxis, SelectedUniqueID } from '$lib/stores/global';
 	import { M3 } from './commands';
 	import CodeHighligher from '../code-highlighter/code-highligher.svelte';
+	import { GlobalMotorCommandsMap } from '../../../hooks.client';
 	let {
-		data,
-		showCodeSamples = false
+		CommandId,
+		ShowCodeSamples = false
 	}: {
-		data: { MotorCommands: Map<number, MotorCommandType>; CommandId: string; Theme: string };
-		showCodeSamples?: boolean;
+		CommandId: number;
+		ShowCodeSamples?: boolean;
 	} = $props();
 
-	let currentCommand = $derived(data.MotorCommands.get(Number(data.CommandId)));
+	const currentCommand = $derived(GlobalMotorCommandsMap.get(CommandId));
 </script>
 
 {#if currentCommand != null && currentCommand.Description != '' && currentCommand.Input == null}
@@ -28,7 +29,7 @@
 			}}>{currentCommand.CommandString}</button
 		>
 	</div>
-	{#if showCodeSamples}
+	{#if ShowCodeSamples}
 		<div class="divider"></div>
 		<CodeHighligher {currentCommand} />
 	{/if}

@@ -5,29 +5,20 @@
 	import MotorToRs232 from '$lib/images/motor-to-rs485.png';
 	import type { DetectedDeviceType, MotorCommandType } from '$lib/client-server-lib/types';
 	import Generic from './generic.svelte';
-	import { DetectedDevices } from '$lib/stores/global';
+	import { DetectedDevices, SelectedUniqueID } from '$lib/stores/global';
 	import { SelectedAxis } from '$lib/stores/global';
 	import { ConvertAxisToStr } from '$lib/client-server-lib/utils';
 	import SelectAxis from '../select-axis.svelte';
-	let {
-		data
-	}: { data: { MotorCommands: Map<number, MotorCommandType>; CommandId: string; Theme: string } } =
-		$props();
+	import { GlobalMotorCommandsMap } from '../../../hooks.client';
 
 	const defaultDev = 'Select target device';
 	let selectedDevice: DetectedDeviceType | string = $state(defaultDev);
-
-	const DetectDevicesProps = {
-		MotorCommands: data.MotorCommands,
-		CommandId: '20',
-		Theme: data.Theme
-	};
-	const IdentifyProps = { MotorCommands: data.MotorCommands, CommandId: '41', Theme: data.Theme };
 
 	$effect(() => {
 		if ($DetectedDevices.length > 0) {
 			selectedDevice = $DetectedDevices[0];
 			$SelectedAxis = ConvertAxisToStr($DetectedDevices[0].Alias);
+			$SelectedUniqueID = $DetectedDevices[0].UniqueID;
 		}
 	});
 </script>
@@ -237,7 +228,8 @@
 				For your convenience, devices will be listed right here if they are successfully detected.
 			</p>
 
-			<Generic data={DetectDevicesProps} />
+			<!-- Detect devices -->
+			<Generic CommandId={20} />
 
 			<div class="flex w-full justify-center">
 				<select
@@ -272,7 +264,8 @@
 				afterward. This command is helpful in case you have multiple motors in a daisy chain and you
 				want to name them differently.
 			</p>
-			<Generic data={IdentifyProps} />
+			<!-- Identify device -->
+			<Generic CommandId={41} />
 			<hr />
 			<h2>Set device alias</h2>
 			<div class="my-5">
@@ -318,7 +311,7 @@
 			{#await import(`./cmd21.svelte`) then Command}
 				<Command.default
 					children={{}}
-					currentCommand={data.MotorCommands.get(21) as MotorCommandType}
+					currentCommand={GlobalMotorCommandsMap.get(21) as MotorCommandType}
 				></Command.default>
 			{:catch}
 				<p>Error mounting set device alias</p>
@@ -339,7 +332,7 @@
 			{#await import(`./cmd31.svelte`) then Command}
 				<Command.default
 					children={{}}
-					currentCommand={data.MotorCommands.get(31) as MotorCommandType}
+					currentCommand={GlobalMotorCommandsMap.get(31) as MotorCommandType}
 				></Command.default>
 			{:catch}
 				<p>Error mounting ping command</p>
@@ -373,7 +366,7 @@
 			{#await import(`./cmd2.svelte`) then Command}
 				<Command.default
 					children={{}}
-					currentCommand={data.MotorCommands.get(2) as MotorCommandType}
+					currentCommand={GlobalMotorCommandsMap.get(2) as MotorCommandType}
 				></Command.default>
 			{:catch}
 				<p>Error mounting trapezoid command</p>

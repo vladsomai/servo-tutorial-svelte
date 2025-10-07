@@ -4,9 +4,6 @@
 	import { SelectedAxis, SelectedUniqueID } from '$lib/stores/global';
 	import LabeledInput from '../labeled-input.svelte';
 	import { M3 } from './commands';
-	import conversionData from './unit_conversions_M3.json';
-	const units = conversionData.units;
-
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
 
 	let maxCurrent = $state(200);

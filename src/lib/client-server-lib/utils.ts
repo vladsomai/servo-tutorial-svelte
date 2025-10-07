@@ -1,4 +1,6 @@
 import { LogError } from "$lib/components/log-window/state.svelte"
+import { GlobalDataTypes } from "../../hooks.client"
+import type { InputOutputObjects } from "./types"
 
 export interface ThemeType {
     SiteTheme: string,
@@ -227,6 +229,44 @@ export const Uint8ArrToNumber = (
     }
 };
 
+export const Uint8ArrToSignedNumber = (
+    arr: Uint8Array,
+    size: ByteSizes,
+    littleEndian = true
+): number | bigint => {
+    if (arr.length !== size) {
+        throw `Invalid Uint8Array length: expected ${size}, got ${arr.length}`;
+    }
+
+    let rawArrBuffer = new ArrayBuffer(size);
+    if (size === 6) {
+        // Extend to 8 bytes for BigInt decoding
+        rawArrBuffer = new ArrayBuffer(8);
+    }
+
+    const view = new DataView(rawArrBuffer);
+
+    // Copy bytes into buffer
+    for (let i = 0; i < size; i++) {
+        view.setUint8(i, arr[i]);
+    }
+
+    switch (size) {
+        case 1:
+            return view.getInt8(0)
+        case 2:
+            return view.getInt16(0, littleEndian)
+        case 4:
+            return view.getInt32(0, littleEndian)
+        case 6:
+            return view.getBigInt64(0, littleEndian)
+        case 8:
+            return view.getBigInt64(0, littleEndian)
+        default:
+            throw `Unsupported byte size when converting Uint8Arr to number: byte size received ${size}`;
+    }
+};
+
 export function Uint8ArrayToAscii(arr: Uint8Array, separator: string = "") {
     return Array.from(arr)
         .map(byte => String.fromCharCode(byte))
@@ -239,10 +279,6 @@ export function DecToBin(dec: number) {
 
 export function GetVersionNumber(arr: Uint8Array): string {
     return arr.reverse().map((byte: any): any => { return String(byte) }).join(".")
-}
-
-export function GetSerialNumber(arr: Uint8Array): string {
-    return GetVersionNumber(arr)
 }
 
 export const makeCRCTable = () => {
@@ -276,30 +312,19 @@ export function GetFuncNameFromCmdString(cmdString: string) {
     return cmdString.replaceAll(" ", "_")
 }
 
-export const ParametersByteCount = new Map<string, number>([
-    ["i8", 1],
-    ["u8", 1],
-    ["i16", 2],
-    ["u16", 2],
-    ["i24", 3],
-    ["u24", 3],
-    ["i32", 4],
-    ["u32", 4],
-    ["i48", 6],
-    ["u48", 6],
-    ["i64", 8],
-    ["u64", 8],
-    ["string8", 8],
-    ["u24_version_number", 3],
-    ["u32_version_number", 4],
-    ["u64_unique_id", 8],
-    ["u8_alias", 1],
-    ["crc32", 4],
-    ["buf10", 10],
-    ["list_2d", 0],
-    ["string_null_term", 0],
-    ["unknown_data", 0],
-    ["general_data", 0],
-    ["firmware_page", 0],
-    ["success_response", 0],
-]);
+export function GetNoOfBytesForParam(param: InputOutputObjects): number {
+    const inpType = param.ParameterType
+
+    if (GlobalDataTypes == null) {
+        const msg = `Could not find no. of bytes for param ${param.ParameterName}. DataTypes could not be imported`
+        LogError(msg)
+        throw msg
+    }
+
+    const noOfBytes = GlobalDataTypes.get(inpType)
+    if (noOfBytes == null || noOfBytes.ByteSize == null) {
+        return NaN // if the byte size is not defined, it can only mean the expected size is infinity
+    }
+
+    return noOfBytes.ByteSize
+}

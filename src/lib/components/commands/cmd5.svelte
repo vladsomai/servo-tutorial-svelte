@@ -4,14 +4,12 @@
 	import { SelectedAxis, SelectedUniqueID } from '$lib/stores/global';
 	import LabeledInput from '../labeled-input.svelte';
 	import LabeledSelect from '../labeled-select.svelte';
-	import { LogWarning } from '../log-window/state.svelte';
 	import { M3 } from './commands';
-	import conversionData from './unit_conversions_M3.json';
-	const units = conversionData.units;
+	import { GlobalConversionTypes } from '../../../hooks.client';
 
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
 	let acceleration = $state(3);
-	let accelerationUnit = $state(units.acceleration[0]);
+	let accelerationUnit = $state(GlobalConversionTypes.units.acceleration[0]);
 </script>
 
 <div class="mb-5 mt-2 w-full">
@@ -22,7 +20,7 @@
 				TooltipText={''}
 				Label={'Acc unit'}
 				bind:SelectValue={accelerationUnit}
-				Options={units.acceleration}
+				Options={GlobalConversionTypes.units.acceleration}
 			/>
 			<LabeledInput
 				Class="mt-2"

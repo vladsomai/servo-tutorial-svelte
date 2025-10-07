@@ -9,13 +9,17 @@
 	import AddAccVelInp from '$lib/images/icons/add.svg';
 	import ResetAccVelInp from '$lib/images/icons/reset.svg';
 	import DeleteAccVelInp from '$lib/images/icons/delete.svg';
-	import conversionData from './unit_conversions_M3.json';
-	import { fade, fly } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
-	const units = conversionData.units;
+	import { GlobalConversionTypes } from '../../../hooks.client';
+	import { onMount } from 'svelte';
 
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
+	let multimoveInputs: VelAccInput[] = $state([]);
 
+	onMount(() => {
+		AddDefaultInputs();
+	});
 	const VelocityStr = 'Velocity';
 	const AccelerationStr = 'Acceleration';
 
@@ -23,10 +27,10 @@
 		is_velocity: VelocityStr,
 
 		value: 0,
-		value_unit: units.velocity[0],
+		value_unit: GlobalConversionTypes.units.velocity[0],
 
 		duration: 0.01,
-		time_unit: units.time[1]
+		time_unit: GlobalConversionTypes.units.time[1]
 	};
 
 	interface VelAccInput {
@@ -39,7 +43,44 @@
 		time_unit: string;
 	}
 
-	let multimoveInputs: VelAccInput[] = $state([]);
+	function AddDefaultInputs() {
+		multimoveInputs = [];
+
+		const inp = {
+			is_velocity: AccelerationStr,
+
+			value: -2,
+			value_unit: GlobalConversionTypes.units.acceleration[0],
+
+			duration: 1,
+			time_unit: GlobalConversionTypes.units.time[1]
+		};
+
+		const inp2 = {
+			is_velocity: VelocityStr,
+
+			value: -2,
+			value_unit: GlobalConversionTypes.units.velocity[0],
+
+			duration: 1,
+			time_unit: GlobalConversionTypes.units.time[1]
+		};
+
+		const inp3 = {
+			is_velocity: AccelerationStr,
+
+			value: 2,
+			value_unit: GlobalConversionTypes.units.acceleration[0],
+
+			duration: 1,
+			time_unit: GlobalConversionTypes.units.time[1]
+		};
+
+		multimoveInputs.push(inp);
+		multimoveInputs.push(inp2);
+		multimoveInputs.push(inp3);
+		multimoveInputs.push(LastMove);
+	}
 
 	function AddNewInputs() {
 		if (multimoveInputs.length > 30) {
@@ -51,10 +92,10 @@
 			is_velocity: VelocityStr,
 
 			value: 3,
-			value_unit: units.velocity[0],
+			value_unit: GlobalConversionTypes.units.velocity[0],
 
 			duration: 5,
-			time_unit: units.time[1]
+			time_unit: GlobalConversionTypes.units.time[1]
 		};
 		multimoveInputs.pop();
 		multimoveInputs.push(inp);
@@ -155,9 +196,9 @@
 			bind:SelectValue={multimoveInputs[index].is_velocity}
 			Options={[VelocityStr, AccelerationStr]}
 			Onchange={(e: any) => {
-				let defaultUnit = units.velocity[0];
+				let defaultUnit = GlobalConversionTypes.units.velocity[0];
 				if (e.target.value == AccelerationStr) {
-					defaultUnit = units.acceleration[0];
+					defaultUnit = GlobalConversionTypes.units.acceleration[0];
 				}
 
 				multimoveInputs[index].value_unit = defaultUnit;
@@ -187,8 +228,8 @@
 				Label={`${multimoveInputs[index].is_velocity} unit`}
 				bind:SelectValue={multimoveInputs[index].value_unit}
 				Options={multimoveInputs[index].is_velocity == VelocityStr
-					? units.velocity
-					: units.acceleration}
+					? GlobalConversionTypes.units.velocity
+					: GlobalConversionTypes.units.acceleration}
 			/>
 			<LabeledInput
 				Class="mt-2"
@@ -203,7 +244,7 @@
 				TooltipText={''}
 				Label={'Time unit'}
 				bind:SelectValue={multimoveInputs[index].time_unit}
-				Options={units.time}
+				Options={GlobalConversionTypes.units.time}
 			/>
 			<LabeledInput
 				Class="mt-2"

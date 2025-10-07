@@ -2,16 +2,14 @@
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
 	import { GetFuncNameFromCmdString } from '$lib/client-server-lib/utils';
 	import { SelectedAxis, SelectedUniqueID } from '$lib/stores/global';
+	import { GlobalConversionTypes } from '../../../hooks.client';
 	import LabeledInput from '../labeled-input.svelte';
 	import LabeledSelect from '../labeled-select.svelte';
-	import { LogWarning } from '../log-window/state.svelte';
 	import { M3 } from './commands';
-	import conversionData from './unit_conversions_M3.json';
-	const units = conversionData.units;
 
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
 	let velocity = $state(3);
-	let velocityUnit = $state(units.velocity[0]);
+	let velocityUnit = $state(GlobalConversionTypes.units.velocity[0]);
 </script>
 
 <div class="mb-5 mt-2 w-full">
@@ -22,7 +20,7 @@
 				TooltipText={''}
 				Label={'Velocity unit'}
 				bind:SelectValue={velocityUnit}
-				Options={units.velocity}
+				Options={GlobalConversionTypes.units.velocity}
 			/>
 			<LabeledInput Class="mt-2" TooltipText={''} Label={'Velocity'} bind:InputValue={velocity} />
 		</div>

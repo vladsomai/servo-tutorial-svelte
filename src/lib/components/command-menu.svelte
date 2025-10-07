@@ -1,9 +1,10 @@
 <script lang="ts">
 	import type { MotorCommandType } from '$lib/client-server-lib/types';
 	import Icon from '@iconify/svelte';
+	import { GlobalMotorCommandsGrouped, GlobalMotorCommandsMap } from '../../hooks.client';
+	import { page } from '$app/state';
 
-	let { data } = $props();
-	const commandGroups = data.MotorCommandsGrouped.size;
+	const commandGroups = GlobalMotorCommandsGrouped.size;
 
 	let menuGroupsExpanded: boolean[] = $state(new Array(commandGroups).fill(false));
 
@@ -14,14 +15,14 @@
 	let searchText = $state('');
 
 	let motorCommandsGroupedFiltered: Map<string, number[]> = $state(
-		new Map(data.MotorCommandsGrouped)
+		new Map(GlobalMotorCommandsGrouped)
 	);
 
 	function handleSearch() {
 		const tempCmds = new Map();
-		for (const [group, commandsIds] of data.MotorCommandsGrouped) {
+		for (const [group, commandsIds] of GlobalMotorCommandsGrouped) {
 			const filteredCmdPerGroup = commandsIds
-				.map((cmdid: number) => data.MotorCommands.get(cmdid))
+				.map((cmdid: number) => GlobalMotorCommandsMap.get(cmdid) as MotorCommandType)
 				.filter((cmd: MotorCommandType) => {
 					if (cmd != null)
 						return cmd.CommandString.toLowerCase().includes(searchText.toLocaleLowerCase());
@@ -142,8 +143,8 @@
 							<li class="mt-3">
 								<a
 									href={`/docs/${cmdid}`}
-									class={`hover:bg-base-300 hover:text-primary ${cmdid == data.CommandId ? 'bg-base-300 text-primary' : ''} w-full rounded-l-lg rounded-r-full p-3 text-left text-sm`}
-									>{data.MotorCommands.get(cmdid).CommandString}</a
+									class={`hover:bg-base-300 hover:text-primary ${cmdid == page.data.CommandId ? 'bg-base-300 text-primary' : ''} w-full rounded-l-lg rounded-r-full p-3 text-left text-sm`}
+									>{GlobalMotorCommandsMap.get(cmdid)!.CommandString}</a
 								>
 							</li>
 						{/each}

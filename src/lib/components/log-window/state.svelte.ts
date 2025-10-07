@@ -1,27 +1,5 @@
+import { LogLevelType, type LogCommandType, type LogType, type LogWindowType, type StatusErrorCodesType } from "$lib/client-server-lib/types";
 import { GetCurrentTimestamp } from "$lib/client-server-lib/utils";
-
-export enum LogLevelType {
-    Info,
-    Warning,
-    Error,
-    Command
-}
-
-export interface LogType {
-    Log: string,
-    Level: LogLevelType,
-    Timestamp: string
-}
-
-export interface LogCommandType extends LogType {
-    Packet: Uint8Array,
-    CommandId: number,
-    IsSendCmd: boolean
-}
-
-export interface LogWindowType {
-    Logs: LogType[]
-}
 
 export const LogWindowLogs: LogWindowType = $state({
     Logs: [],
@@ -35,25 +13,28 @@ export function LogInfo(log: string) {
     const newLog: LogType = {
         Log: log,
         Level: LogLevelType.Info,
-        Timestamp: ""
+        Timestamp: "",
+        TroubleshootError: null
     }
     addLog(newLog)
 }
 
-export function LogWarning(log: string) {
+export function LogWarning(log: string, troubleshootError: StatusErrorCodesType | null = null) {
     const newLog: LogType = {
         Log: log,
         Level: LogLevelType.Warning,
-        Timestamp: ""
+        Timestamp: "",
+        TroubleshootError: troubleshootError
     }
     addLog(newLog)
 }
 
-export function LogError(log: string) {
+export function LogError(log: string, troubleshootError: StatusErrorCodesType | null = null) {
     const newLog: LogType = {
         Log: log,
         Level: LogLevelType.Error,
-        Timestamp: ""
+        Timestamp: "",
+        TroubleshootError: troubleshootError
     }
     addLog(newLog)
 }
@@ -65,7 +46,8 @@ export function LogCommand(logCommand: LogCommandType) {
         CommandId: logCommand.CommandId,
         Level: LogLevelType.Command,
         IsSendCmd: logCommand.IsSendCmd,
-        Timestamp: ""
+        Timestamp: "",
+        TroubleshootError: null
     }
     addLog(newLog)
 }
@@ -74,5 +56,6 @@ function addLog(newLog: LogType) {
     const timestamp = GetCurrentTimestamp()
     newLog.Timestamp = timestamp
     LogWindowLogs.Logs = [...LogWindowLogs.Logs, newLog]
+
     // LogWindowLogs.Logs.push(newLog)
 }

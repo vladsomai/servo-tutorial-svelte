@@ -1,9 +1,8 @@
 <script lang="ts">
-	import type { MotorCommandType } from '$lib/client-server-lib/types';
+	import type { LogCommandType, MotorCommandType } from '$lib/client-server-lib/types';
 	import { ShowLogTimestamp } from '$lib/stores/global';
 	import { onMount } from 'svelte';
 	import HexString from './hex-string.svelte';
-	import type { LogCommandType, LogType } from './state.svelte';
 	import { InterpretCommand, type ByteInterpretation } from '../commands/commands';
 
 	let { Log }: { Log: LogCommandType } = $props();

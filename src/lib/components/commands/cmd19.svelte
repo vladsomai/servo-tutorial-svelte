@@ -4,17 +4,16 @@
 	import { M3 } from './commands';
 	import LabeledInput from '../labeled-input.svelte';
 	import LabeledSelect from '../labeled-select.svelte';
-	import conversionData from './unit_conversions_M3.json';
 	import { GetFuncNameFromCmdString } from '$lib/client-server-lib/utils';
-	const units = conversionData.units;
-
+	import { GlobalConversionTypes } from '../../../hooks.client';
+	
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
 
 	let acceleration = $state(1);
-	let accelerationUnit = $state(units.acceleration[0]);
+	let accelerationUnit = $state(GlobalConversionTypes.units.acceleration[0]);
 
 	let duration = $state(3);
-	let timeUnit = $state(units.time[1]);
+	let timeUnit = $state(GlobalConversionTypes.units.time[1]);
 </script>
 
 <div class="mb-5 mt-2 w-full">
@@ -25,7 +24,7 @@
 				TooltipText={''}
 				Label={'Acc unit'}
 				bind:SelectValue={accelerationUnit}
-				Options={units.acceleration}
+				Options={GlobalConversionTypes.units.acceleration}
 			/>
 			<LabeledInput
 				Class="mt-2"
@@ -39,7 +38,7 @@
 				TooltipText={''}
 				Label={'Time unit'}
 				bind:SelectValue={timeUnit}
-				Options={units.time}
+				Options={GlobalConversionTypes.units.time}
 			/>
 			<LabeledInput Class="mt-2" TooltipText={''} Label={'Duration'} bind:InputValue={duration} />
 		</div>

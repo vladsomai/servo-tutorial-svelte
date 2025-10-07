@@ -4,9 +4,7 @@
 	import { SelectedAxis, SelectedUniqueID } from '$lib/stores/global';
 	import LabeledSelect from '../labeled-select.svelte';
 	import { M3 } from './commands';
-
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
-
 	const enable = 'Reset';
 	const disable = 'Read';
 	const ControlOptions = [enable, disable];

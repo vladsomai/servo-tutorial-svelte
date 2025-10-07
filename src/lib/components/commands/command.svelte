@@ -5,14 +5,12 @@
 	import { Modal, SetModalComponent, SetModalContent } from '../modal/modal.svelte';
 	import Model3d from '../modal/model-3d.svelte';
 	import Generic from './generic.svelte';
-
 	import { fly } from 'svelte/transition';
-	import CodeHighligher from '../code-highlighter/code-highligher.svelte';
-	let {
-		data
-	}: { data: { MotorCommands: Map<number, MotorCommandType>; CommandId: string; Theme: string } } =
-		$props();
-	let currentCommand = $derived(data.MotorCommands.get(Number(data.CommandId)));
+	import { GlobalMotorCommandsMap } from '../../../hooks.client';
+	import { page } from '$app/state';
+	import SelectAxis from '../select-axis.svelte';
+
+	let currentCommand = $derived(GlobalMotorCommandsMap.get(page.data.CommandId));
 </script>
 
 <div class="flex w-full justify-between">
@@ -113,7 +111,7 @@
 						<ol class="">
 							{#each currentCommand.Input as input}
 								<li>
-									<p>{input.Description}</p>
+									<p>{input.ParameterType} {input.ParameterName}: {input.Description}</p>
 								</li>
 							{/each}
 						</ol>
@@ -136,7 +134,7 @@
 						<ol class="">
 							{#each currentCommand.Output as output}
 								<li>
-									<p>{output.Description}</p>
+									<p>{output.ParameterType} {output.ParameterName}: {output.Description}</p>
 								</li>
 								{#if output.BitDescriptions != null}
 									<ul>
@@ -155,12 +153,17 @@
 		</div>
 	</div>
 	<div class="divider"></div>
-	<Generic {data} showCodeSamples={true}></Generic>
+	<Generic CommandId={page.data.CommandId} ShowCodeSamples={true}></Generic>
 {/if}
 
-{#await import(`./cmd${data.CommandId}.svelte`) then Command}
+{#await import(`./cmd${page.data.CommandId}.svelte`) then Command}
 	{#if currentCommand != null}
-		<Command.default {currentCommand} {data}></Command.default>
+		{#if currentCommand.Input != null}
+			<div class="flex w-full justify-center">
+				<SelectAxis />
+			</div>
+		{/if}
+		<Command.default {currentCommand}></Command.default>
 	{/if}
 {:catch}
 	<!-- A dedicated component is not defined for this currentCommand -->

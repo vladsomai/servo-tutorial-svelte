@@ -1,21 +1,11 @@
-import { browser } from "$app/environment";
 import { SerialPortActions } from "$lib/client-server-lib/serial-communication/serial-comm";
-import type { MotorCommandType } from "$lib/client-server-lib/types";
-import { ConvertAxisToNum, crc32, DecToBin, GetFuncNameFromCmdString, GetSerialNumber, GetVersionNumber, LittleEndianToBigEndian, NumberToUint8Arr, ParametersByteCount, sleep, StringToUint8Array, Uint8ArrayToAscii, Uint8ArrayToString, Uint8ArrToNumber, type ByteSizes } from "$lib/client-server-lib/utils";
-import { DetectedDevices } from "$lib/stores/global";
-import { LogError, LogInfo, type LogCommandType } from "../log-window/state.svelte";
+import type { LogCommandType, MotorCommandType } from "$lib/client-server-lib/types";
+import { ConvertAxisToNum, crc32, DecToBin, GetNoOfBytesForParam, GetVersionNumber, LittleEndianToBigEndian, NumberToUint8Arr, StringToUint8Array, Uint8ArrayToAscii, Uint8ArrayToString, Uint8ArrToNumber, Uint8ArrToSignedNumber, type ByteSizes } from "$lib/client-server-lib/utils";
+import { GlobalConversionTypes, GlobalMotorCommandsMap, GlobalStatusErrorCodes } from "../../../hooks.client";
+import { LogError, LogInfo } from "../log-window/state.svelte";
 import ShrtDisableMosfets from "../modal/shortcuts/shrtDisableMosfets.svelte";
 import ShrtEnableMosfets from "../modal/shortcuts/shrtEnableMosfets.svelte";
 import ShrtSystemReset from "../modal/shortcuts/shrtSystemReset.svelte";
-import conversionData from "./unit_conversions_M3.json";
-const conversion_factors = conversionData.conversion_factors;
-const units = conversionData.units
-
-export let MotorCommands: MotorCommandType[] = []
-if (browser) {
-    const res = await fetch('/motor_commands.json');
-    MotorCommands = await res.json() as MotorCommandType[];
-}
 
 function ConstructCommand(axisStr: string, uniqueId: string, commandEnum: number, payload: Uint8Array, crc32Enabled: boolean): Uint8Array {
     let alias = ConvertAxisToNum(axisStr)
@@ -100,7 +90,11 @@ async function ExecuteCommand(axisStr: string, uniqueId: string, commandEnum: nu
 }
 
 function PositionToUint8Arr(position: number, positionUnit: string, byteSize: number) {
-    const requestedPosUnit = units.position.find((val) => val == positionUnit)
+    const conversion_types = GlobalConversionTypes
+    const units = conversion_types.units
+    const conversion_factors = conversion_types.conversion_factors
+
+    const requestedPosUnit = units.position.find((val: any) => val == positionUnit)
     if (requestedPosUnit == null) {
         throw `Position unit is not supported: ${positionUnit}`
     }
@@ -113,7 +107,12 @@ function PositionToUint8Arr(position: number, positionUnit: string, byteSize: nu
 }
 
 function AccelerationToUint8Arr(acceleration: number, accelerationUnit: string) {
-    const requestedAccUnit = units.acceleration.find((val) => val == accelerationUnit)
+
+    const conversion_types = GlobalConversionTypes
+    const units = conversion_types.units
+    const conversion_factors = conversion_types.conversion_factors
+
+    const requestedAccUnit = units.acceleration.find((val: any) => val == accelerationUnit)
     if (requestedAccUnit == null) {
         throw `Acceleration unit is not supported: ${accelerationUnit}`
     }
@@ -126,7 +125,11 @@ function AccelerationToUint8Arr(acceleration: number, accelerationUnit: string) 
 }
 
 function VelocityToUint8Arr(velocity: number, velocityUnit: string) {
-    const requestedVelUnit = units.velocity.find((val) => val == velocityUnit)
+    const conversion_types = GlobalConversionTypes
+    const units = conversion_types.units
+    const conversion_factors = conversion_types.conversion_factors
+
+    const requestedVelUnit = units.velocity.find((val: any) => val == velocityUnit)
     if (requestedVelUnit == null) {
         throw `Velocity unit is not supported: ${velocityUnit}`
     }
@@ -143,7 +146,11 @@ function TimeToUint8Arr(time: number, timeUnit: string) {
         throw "Time cannot be negative"
     }
 
-    const requestedTimeUnit = units.time.find((val) => val == timeUnit)
+    const conversion_types = GlobalConversionTypes
+    const units = conversion_types.units
+    const conversion_factors = conversion_types.conversion_factors
+
+    const requestedTimeUnit = units.time.find((val: any) => val == timeUnit)
     if (requestedTimeUnit == null) {
         throw `Time unit is not supported: ${timeUnit}`
     }
@@ -250,7 +257,7 @@ export class M3 {
     };
 }
 
-async function ExecuteGenericCommand(axisStr: string, uniqueId: string, command: MotorCommandType, args: any[]) {
+export async function ExecuteGenericCommand(axisStr: string, uniqueId: string, command: MotorCommandType, args: any[]) {
     let argsStr = ""
 
     if (args != null) {
@@ -308,17 +315,12 @@ async function ExecuteGenericCommand(axisStr: string, uniqueId: string, command:
             throw `Incorrect argument type: expected ${currentParamType}, received ${arg.type}`
         }
 
-        const inpType = inp.Description.slice(0, inp.Description.indexOf(":"))
-        const noOfBytes = ParametersByteCount.get(inpType)
-        if (noOfBytes == null) {
-            throw `Command definition ${command.CommandString} is invalid, expected type to be defined in \"Description\" field for input ${i} (e.g. i32)`
-        }
+        const noOfBytes = GetNoOfBytesForParam(inp)
 
         const valArr = GetCommValueFromValueType(arg.value, arg.unit, arg.type, noOfBytes)
         inputChunks.push(valArr)
-
-
     }
+
     const payloadLength = inputChunks.reduce((sum, chunk) => sum + chunk.length, 0)
     const payload = new Uint8Array(payloadLength)
     let offset = 0
@@ -327,13 +329,6 @@ async function ExecuteGenericCommand(axisStr: string, uniqueId: string, command:
         offset += chunk.length
     }
     await ExecuteCommand(axisStr, uniqueId, command.CommandEnum, payload);
-}
-
-for (let cmd of MotorCommands) {
-    const cmdFunction = GetFuncNameFromCmdString(cmd.CommandString)
-
-    // @ts-ignore
-    M3[cmdFunction] = ExecuteGenericCommand
 }
 
 export const CommandsWithShortcuts = new Map<number, any>([
@@ -359,7 +354,8 @@ export interface ByteInterpretation {
 export function InterpretCommand(log: LogCommandType): ByteInterpretation[] {
     const packetStr = log.Log
     const packet = StringToUint8Array(log.Log)
-    const command = MotorCommands.find((cmd) => cmd.CommandEnum == log.CommandId)
+
+    const command = GlobalMotorCommandsMap.get(log.CommandId!)
 
     if (command == null) {
         const msg = `Can not interpret command ${log.CommandId} because it was not found in the list of commands`
@@ -421,12 +417,11 @@ function GetInputByteInterpretation(packetString: string, packet: Uint8Array, cr
     })
 
     if (command.Input != null) {
-        let offset = 3
+        let offset = cmdIdIdx + 1
         for (const inp of command.Input) {
-            const inpType = inp.Description.slice(0, inp.Description.indexOf(":"))
-            let noOfBytes = (ParametersByteCount.get(inpType) as number)
+            let noOfBytes = GetNoOfBytesForParam(inp)
 
-            if (noOfBytes == 0) {
+            if (isNaN(noOfBytes)) {
                 // Dynamic data incoming, read all until end
                 noOfBytes = packet.length - offset
                 if (crc32Enabled) {
@@ -441,7 +436,7 @@ function GetInputByteInterpretation(packetString: string, packet: Uint8Array, cr
 
             let dispFormat: string[] = []
             if (inp.TooltipDisplayFormat != null) {
-                dispFormat = GetDisplayFormat(inp.TooltipDisplayFormat, hexColleced)
+                dispFormat = GetDisplayFormat(inp.TooltipDisplayFormat, hexColleced, noOfBytes)
             }
 
             result.push({
@@ -488,6 +483,17 @@ function GetOutputByteInterpretation(packetString: string, packet: Uint8Array, c
     if (crc32Enabled && packet.length == 6) {
         //success response - CRC32 enabled
     }
+    else if (crc32Enabled && packet.length == 7) {
+        //Motor is in an error, the third byte is the error status
+
+        const err = GlobalStatusErrorCodes.get(packet[2])
+
+        result.push({
+            HexString: packetStringSplit[2],
+            Description: `Motor error: ${err?.short_desc}`
+        })
+        LogError(`Motor is in an error state: ${err?.short_desc}`, err)
+    }
     else if (packet.length == 2) {
         //success response - CRC32 disabled
     }
@@ -507,16 +513,9 @@ function GetOutputByteInterpretation(packetString: string, packet: Uint8Array, c
         if (command.Output != null) {
             let offset = 3//first 2 bytes are size and alias
             for (const out of command.Output) {
-                const outType = out.Description.slice(0, out.Description.indexOf(":"))
-                let noOfBytes = (ParametersByteCount.get(outType))
+                let noOfBytes = GetNoOfBytesForParam(out)
 
-                if (noOfBytes == null) {
-                    const msg = `Output parameter type ${outType} is not supported`
-                    LogError(msg)
-                    throw Error(msg)
-                }
-
-                if (noOfBytes == 0) {
+                if (isNaN(noOfBytes)) {
                     // Dynamic data incoming, read all until end
                     noOfBytes = packet.length - offset
                     if (crc32Enabled) {
@@ -531,10 +530,19 @@ function GetOutputByteInterpretation(packetString: string, packet: Uint8Array, c
 
                 let dispFormat: string[] = []
                 if (out.TooltipDisplayFormat != null) {
-                    dispFormat = GetDisplayFormat(out.TooltipDisplayFormat, hexColleced)
+                    dispFormat = GetDisplayFormat(out.TooltipDisplayFormat, hexColleced, noOfBytes)
                 }
 
+                if (out.ParameterName == "fatalErrorCode") {
+                    // special handling for GetStatus
+                    const err = GlobalStatusErrorCodes.get(hexColleced[0])
 
+                    if (hexColleced[0] != 0) {
+                        LogError(`Motor encountered an error: ${err?.short_desc}`, err)
+                    }
+
+                    dispFormat = [...dispFormat, String(err?.long_desc)]
+                }
 
                 result.push({
                     HexString: hexCollecedStr,
@@ -568,7 +576,7 @@ function GetOutputByteInterpretation(packetString: string, packet: Uint8Array, c
  * @param format format string
  * @param hexString hex number as string to be converted to the specified format
  */
-function GetDisplayFormat(format: string, arr: Uint8Array) {
+function GetDisplayFormat(format: string, arr: Uint8Array, size: number) {
     const formatArr = format.split(',');
 
     let res = '';
@@ -578,14 +586,6 @@ function GetDisplayFormat(format: string, arr: Uint8Array) {
     for (format of formatArr) {
         convertedTo = ''
         switch (format) {
-            case 'i8':
-                convertedTo += "number: "
-                res = Uint8ArrToNumber(arr, 1).toString()
-                break
-            case 'u8':
-                convertedTo += "number: "
-                res = Uint8ArrToNumber(arr, 1).toString()
-                break
             case '%c':
                 convertedTo += "char: "
                 res = '\'' + String.fromCharCode(arr[0]) + '\''
@@ -596,71 +596,51 @@ function GetDisplayFormat(format: string, arr: Uint8Array) {
                 break
             case '%hd':
                 convertedTo += "short: "
-                res = Uint8ArrToNumber(arr, 2).toString()
+                res = Uint8ArrToSignedNumber(arr, size as ByteSizes).toString()
                 break
             case '%hu':
                 convertedTo += "unsigned short: "
-                res = Uint8ArrToNumber(arr, 2).toString()
+                res = Uint8ArrToNumber(arr, size as ByteSizes).toString()
                 break
             case '%d':
                 convertedTo += "decimal: "
-                res = Uint8ArrToNumber(arr, 4).toString()
+                res = Uint8ArrToSignedNumber(arr, size as ByteSizes).toString()
                 break
             case '%u':
                 convertedTo += "unsigned decimal: "
-                res = Uint8ArrToNumber(arr, 4).toString()
-                break
-            case 'i48':
-                convertedTo += "decimal: "
-                res = Uint8ArrToNumber(arr, 6).toString()
-                break
-            case 'u48':
-                convertedTo += "unsigned decimal: "
-                res = Uint8ArrToNumber(arr, 6).toString()
+                res = Uint8ArrToNumber(arr, size as ByteSizes).toString()
                 break
             case '%ld':
                 convertedTo += "long: "
-                res = Uint8ArrToNumber(arr, 8).toString()
+                res = Uint8ArrToSignedNumber(arr, size as ByteSizes).toString()
                 break
             case '%lu':
                 convertedTo += "unsigned long: "
-                res = Uint8ArrToNumber(arr, 8).toString()
+                res = Uint8ArrToNumber(arr, size as ByteSizes).toString()
                 break
             case '%lld':
                 convertedTo += "long long: "
-                res = Uint8ArrToNumber(arr, 8).toString()
+                res = Uint8ArrToSignedNumber(arr, size as ByteSizes).toString()
                 break
             case '%llu':
                 convertedTo += "unsigned long long: "
-                res = Uint8ArrToNumber(arr, 8).toString()
+                res = Uint8ArrToNumber(arr, size as ByteSizes).toString()
                 break
             case '%b':
-                const num = Uint8ArrToNumber(arr, 4) as number
+                const num = Uint8ArrToNumber(arr, size as ByteSizes) as number
                 const binaryStr = DecToBin(num)
                 convertedTo += "binary: "
                 res = binaryStr
                 break
-            case '%bhu':
-                const num2 = Uint8ArrToNumber(arr, 2) as number
-                const binaryStr2 = DecToBin(num2)
-                convertedTo += "binary: "
-                res = binaryStr2
-                break
-            case '%hwvn':
-                convertedTo += "hardware version number: "
-                res = GetVersionNumber(arr)
-                break
-            case '%hwsn':
-                convertedTo += "hardware serial number: "
-                res = GetSerialNumber(arr)
-                break
-            case '%fwvn':
-                convertedTo += "firmware version number: "
-                res = GetSerialNumber(arr)
-                break
             case '%x':
-                convertedTo += "hexadecimal: "
+                convertedTo += "big endian hexadecimal: "
                 res = '0x' + Uint8ArrayToString(LittleEndianToBigEndian(arr))
+                break
+
+            // Non standard C formats
+            case 'version':
+                convertedTo += "version number: "
+                res = GetVersionNumber(arr)
                 break
             default:
                 break
@@ -700,7 +680,6 @@ function RefreshCrc32Enabled(response: Uint8Array): void {
     else {
         throw "RefreshCrc32Enabled is only expected for response commands"
     }
-
 }
 
 function IsCrc32Valid(response: Uint8Array): boolean {
@@ -717,8 +696,5 @@ function IsCrc32Valid(response: Uint8Array): boolean {
     return crcHexStr == Uint8ArrayToString(receivedCrcHexStr)
 }
 
-const HandleOutputMap = new Map<number, Function>()
-HandleOutputMap.set(20, HandleDetectDevicesResponse)
-function HandleDetectDevicesResponse(uniqueId: string, alias: string) {
-    DetectedDevices.set([{ UniqueID: uniqueId, Alias: parseInt(alias, 16) }])
-}
+// Add callbacks for each command response
+export const HandleOutputMap = new Map<number, Function>()
