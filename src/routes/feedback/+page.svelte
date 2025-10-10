@@ -1,4 +1,4 @@
-<!-- <script lang="ts">
+<script lang="ts">
 	import BoyImg from '$lib/images/feedback_left_boy.png';
 	import GirlImg from '$lib/images/feedback_right_girl.png';
 	import FeedbackSent from '$lib/images/feedback_sent.svg';
@@ -10,14 +10,13 @@
 	import { Modal, SetModalComponent, SetModalContent } from '$lib/components/modal/modal.svelte';
 	import GenericModal from '$lib/components/modal/generic-modal.svelte';
 
-	const ratio = 1.382;
-	const maxCharactersFeedbackInput = 10000; //do not allow the feedback to get higher than 10k chars
-	
+	const maxCharactersFeedbackInput = 3000; //do not allow the feedback to get higher than 10k chars
+
 	let innerWidth = $state(0);
 	let attachmentInputElem: HTMLInputElement | null = $state(null);
 	let waitingFeedbackReply = $state(false);
-	let feebackTextInputLeft = $state(maxCharactersFeedbackInput);
-	let feebackTextInput = $state('');
+	let feedbackTextInputLeft = $state(maxCharactersFeedbackInput);
+	let feedbackTextInput = $state('');
 
 	async function sendFeedback(e: any) {
 		e.preventDefault();
@@ -79,48 +78,42 @@
 		}
 
 		e.target.reset();
-		feebackTextInput = '';
+		feedbackTextInput = '';
 		waitingFeedbackReply = false;
 	}
 </script>
 
 <svelte:window bind:innerWidth />
 
-<div class="flex h-screen w-full flex-col items-center justify-center">
-	<h1>Feedback page</h1>
-	<a class="btn btn-primary" href="/docs/1002">Docs</a>
-</div>
-
 <div class="flex h-screen flex-col items-center justify-start">
-	{#if innerWidth > 768}
-		<div class="fixed bottom-[20px] -z-10 hidden md:flex">
-			<img
-				class={`h-auto w-[50%] max-w-[712px]`}
-				width={0}
-				height={0}
-				src={BoyImg}
-				alt="boy illustration"
-			/>
-			<img
-				class="h-auto w-[50%] max-w-[712px]"
-				width={0}
-				height={0}
-				src={GirlImg}
-				alt="girl illustration"
-			/>
-		</div>
-	{/if}
+	<div class="fixed bottom-[20px] -z-10 flex">
+		<img
+			class={`h-auto w-[50%] max-w-[500px]`}
+			width={0}
+			height={0}
+			src={BoyImg}
+			alt="boy illustration"
+		/>
+		<img
+			class="h-auto w-[50%] max-w-[500px]"
+			width={0}
+			height={0}
+			src={GirlImg}
+			alt="girl illustration"
+		/>
+	</div>
+	<a class="link mt-5" href="/docs/1002">Go to docs</a>
 
-	<div class=" mt-10 w-full text-center">
+	<div class=" mt-5 w-full text-center">
 		<p class="feedbackTextColor text-center text-4xl md:text-5xl lg:text-6xl 2xl:text-7xl">
 			We care.
 		</p>
 		<p class="feedbackTextColor text-center text-4xl md:text-5xl lg:text-6xl 2xl:text-7xl">
-			That&apos;s why we need your feedback.
+			That's why we need your feedback.
 		</p>
 	</div>
 
-	<form onsubmit={sendFeedback} class="mx-10 mt-10 flex flex-col">
+	<form onsubmit={sendFeedback} class="mx-10 mt-3 flex flex-col">
 		<input
 			required
 			name="email"
@@ -134,47 +127,39 @@
 			name="message"
 			placeholder="What should we change?"
 			class="textarea textarea-bordered textarea-xs 2xl:textarea-lg mt-5 h-[80px] w-full max-w-sm resize-none md:h-[120px]"
-			value={feebackTextInput}
 			maxlength={maxCharactersFeedbackInput}
-			onchange={(event) => {
+			oninput={(event) => {
 				const textareaElem = event.target as HTMLTextAreaElement;
 
 				//assure the length cannot get larger than max
 				const inputWritten = textareaElem.value.slice(0, maxCharactersFeedbackInput);
 
-				feebackTextInput = inputWritten;
-				feebackTextInputLeft = maxCharactersFeedbackInput - inputWritten.length;
+				feedbackTextInputLeft = maxCharactersFeedbackInput - inputWritten.length;
 			}}
 		></textarea>
 		<span class="mt-1 text-right text-xs">
-			Characters left {feebackTextInputLeft}/
+			Characters left {feedbackTextInputLeft}/
 			{maxCharactersFeedbackInput}
 		</span>
-		<label class="mt-3 w-full max-w-sm cursor-pointer text-justify text-xs 2xl:text-lg">
+		<label class="mt-10 w-full max-w-sm cursor-pointer text-justify text-xs 2xl:text-lg">
 			Images or documents help us diagnose issues faster, attach anything that can give us more
 			insight.
 			<input
 				bind:this={attachmentInputElem}
 				multiple
-				class="border-neutral file:btn file:btn-sm block w-full max-w-sm cursor-pointer rounded-lg border text-sm file:mr-5 file:rounded-none file:border-0"
+				class="border-neutral file-input input-sm mt-2 w-full"
 				type="file"
 				accept=".doc,.docx,.zip,.7z,.pdf,image/*"
 				name="attachment"
-				id="attachment"
 			/>
 		</label>
-		<button
-			type="submit"
-			class={`btn btn-primary btn-md mx-auto mt-5 max-w-[220px] ${
-				waitingFeedbackReply ? 'loading' : ''
-			}`}
-			disabled={waitingFeedbackReply}
-		>
+		<button class={`btn btn-primary btn-md mx-auto mt-5 max-w-[220px]`} disabled={waitingFeedbackReply}>
 			{#if waitingFeedbackReply}
+				<span class="loading loading-dots"></span>
 				<span>Sending feedback</span>
 			{:else}
 				<span>Send feedback</span>
 			{/if}
 		</button>
 	</form>
-</div> -->
+</div>

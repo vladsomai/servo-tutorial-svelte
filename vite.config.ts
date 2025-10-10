@@ -5,12 +5,11 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	optimizeDeps: {
-		exclude: ['firebase', 'jszip'],
 		include: [
-			// 'firebase/app',
-			// 'firebase/firestore',
-			// 'firebase/storage',
-			// 'firebase/auth',
+			'firebase/app',
+			'firebase/firestore',
+			'firebase/storage',
+			'firebase/auth',
 			'shiki']
 	},
 
