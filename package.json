@@ -46,6 +46,8 @@
 		"@floating-ui/dom": "^1.7.4",
 		"babylonjs": "^8.23.1",
 		"babylonjs-loaders": "^8.23.1",
-		"daisyui": "^5.1.25"
+		"daisyui": "^5.1.25",
+		"firebase": "^12.3.0",
+		"jszip": "^3.10.1"
 	}
 }
