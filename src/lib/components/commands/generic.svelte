@@ -19,7 +19,10 @@
 
 {#if currentCommand != null && currentCommand.Description != '' && currentCommand.Input == null}
 	<div class="mt-5 flex flex-col text-center transition-all duration-300">
-		<SelectAxis />
+		<div class="w-full flex justify-center">
+
+			<SelectAxis />
+		</div>
 		<button
 			class="btn btn-primary btn-sm mx-auto my-5"
 			onclick={() => {

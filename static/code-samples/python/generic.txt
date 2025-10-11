@@ -4,40 +4,107 @@ import platform
 import struct
 
 # Define your serial port
-PORT = "COM7" 
+PORT = "COM5"
 
 # Define all the parameters for this command
 alias = 255
 motor_command = 0
-motor_command_length = 0
 
-if platform.system() == 'Windows':
-PORT_PREFIX = '\\\\.\\'
+if platform.system() == "Windows":
+    PORT_PREFIX = "\\\\.\\"
 else:
-PORT_PREFIX = ''
+    PORT_PREFIX = ""
 
 try:
-serialPort = serial.Serial(PORT_PREFIX + PORT, 230400, timeout = 1)
-except:
-print('Could not open serial port.')
-exit()
+    serialPort = serial.Serial(PORT_PREFIX + PORT, 230400, timeout=1)
+except Exception as e:
+    print("Could not open serial port:", e)
+    exit()
+
 print(f"Successfully opened the serial port: {serialPort.name}")
 
-# Format of the command: uchar, uchar, uchar, int, uint
+
+def make_crc_table():
+    crc_table = []
+    for n in range(256):
+        c = n
+        for _ in range(8):
+            if c & 1:
+                c = (0xEDB88320 ^ (c >> 1)) & 0xFFFFFFFF
+            else:
+                c = (c >> 1) & 0xFFFFFFFF
+        crc_table.append(c)
+    return crc_table
+
+
+crc_table = make_crc_table()
+
+
+def crc32(data: bytes) -> int:
+    crc = 0 ^ 0xFFFFFFFF
+    for byte in data:
+        crc = (crc >> 8) ^ crc_table[(crc ^ byte) & 0xFF]
+    return crc ^ 0xFFFFFFFF
+
+
+def number_to_uint8_arr(value: int, length: int) -> bytes:
+    """Convert an integer to a little-endian byte array of given length."""
+    return value.to_bytes(length, byteorder="little", signed=False)
+
+
+def uint8array_to_string(arr: bytes) -> str:
+    """Convert bytes to a hex string (uppercase, no separators)."""
+    return arr.hex().upper()
+
+
+def is_crc32_valid(response: bytes) -> bool:
+    if len(response) < 6:
+        raise ValueError(
+            "CRC32 cannot be calculated because the packet is not at least 6 bytes"
+        )
+
+    # Calculate CRC over everything except the last 4 bytes
+    crc_val = crc32(response[:-4])
+    crc_arr = number_to_uint8_arr(crc_val, 4)
+
+    crc_hex_str = uint8array_to_string(crc_arr)
+    received_crc_hex_str = uint8array_to_string(response[-4:])
+
+    return crc_hex_str == received_crc_hex_str
+
+
+# packet size is the alias size + motor_command size + motor_command_length + CRC32
+packet_size = 7 << 1 | 1
+
+# Format of the command: uchar, uchar, uchar
 # Reference: https://docs.python.org/3/library/struct.html#format-characters
-command_format = '<BBB'
-bytes = struct.pack(command_format, alias, motor_command, motor_command_length)
+command_format = "<BBB"
+packet = struct.pack(command_format, packet_size, alias, motor_command)
 
-for d in bytes:
+packet_crc32 = crc32(packet)
+
+
+command_format = "<BBBI"
+packet_with_crc32 = struct.pack(
+    command_format, packet_size, alias, motor_command, packet_crc32
+)
+
+for d in packet_with_crc32:
     print("0x%02X %d" % (d, d))
 
-serialPort.write(bytes)
+serialPort.write(packet_with_crc32)
 
-data = serialPort.read(1000)
-print("Received %d bytes" % (len(data)))
-print(data)
+response = serialPort.read(1000)
+print("Received %d bytes" % (len(response)))
+print(response)
 
-for d in data:
+for d in response:
     print("0x%02X %d" % (d, d))
+
+validStr = "invalid"
+if is_crc32_valid(response):
+    validStr = "valid"
+
+print(f"Response CRC32 is {validStr}")
 
 serialPort.close()

@@ -281,7 +281,11 @@ export function GetVersionNumber(arr: Uint8Array): string {
     return arr.reverse().map((byte: any): any => { return String(byte) }).join(".")
 }
 
-export const makeCRCTable = () => {
+export function LittleEndianToBigEndian(arr: Uint8Array): Uint8Array {
+    return arr.slice().reverse()
+}
+
+function makeCRCTable() {
     let c;
     let crcTable = [];
     for (let n = 0; n < 256; n++) {
@@ -294,18 +298,14 @@ export const makeCRCTable = () => {
     return crcTable
 }
 
-export function LittleEndianToBigEndian(arr: Uint8Array): Uint8Array {
-    return arr.slice().reverse()
-}
+const crcTable = makeCRCTable();
 
-export const crcTable = makeCRCTable();
-
-export const crc32 = (data: Uint8Array) => {
-    let crc = 0 ^ (-1);
+export function crc32(data: Uint8Array) {
+    let crc = 0 ^ -1;
     for (let i = 0; i < data.length; i++) {
         crc = (crc >>> 8) ^ crcTable[(crc ^ data[i]) & 0xFF];
     }
-    return (crc ^ (-1)) >>> 0;
+    return crc ^ -1;
 };
 
 export function GetFuncNameFromCmdString(cmdString: string) {

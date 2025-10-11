@@ -3,10 +3,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-// Change the "serialPortName" based on your specific case
 #ifdef _WIN32
 #include<windows.h>
-const char* serialPortName = "\\\\.\\COM7";
+const char* serialPortName = "\\\\.\\COM5";
 #else
 // MAC or Linux
 #include <unistd.h>
@@ -15,235 +14,139 @@ const char* serialPortName = "\\\\.\\COM7";
 const char* serialPortName = "/dev/ttyUSB0";
 #endif
 
+uint32_t crcTable[256] = { 0 };
 void SetupSerialPort();
 FILE* OpenPort(const char* serialPort);
-size_t GetRecvCommandSize(uint8_t cmdCode);
+uint32_t ConvertDoubleToUint32LittleEndian(const double input);
+void ConvertUintTo4BytesArr(uint8_t* buffer, uint8_t buffSize, uint32_t number);
+uint32_t crc32(uint8_t* data, size_t length);
+void makeCRCTable();
+uint32_t ConvertUint32ToLittleEndian(uint32_t input);
 
 int main(int argc, char* argv[])
 {
-    SetupSerialPort();
-    FILE* portHandle = OpenPort(serialPortName);
+	makeCRCTable();
 
-    if (!portHandle)
-        return -1;
+	SetupSerialPort();
+	FILE* portHandle = OpenPort(serialPortName);
 
-    // Define all the parameters for this command
-    uint8_t alias = 255;
-    uint8_t motor_command = 11;
-    uint8_t motor_command_length = 0;
+	if (!portHandle)
+		return -1;
 
-    uint8_t cmd[] = { alias, motor_command, motor_command_length };
+	// Define all the parameters for this command
+	uint8_t alias = 255;
+	uint8_t motor_command = 0;
+	uint8_t motor_command_length = 7;
+	uint8_t transmit_size = (motor_command_length << 1) | 1;
 
-    printf("Sending the following command: \n");
-    for (int i = 0; i < sizeof(cmd); i++)
-    {
-        printf("0x%x ", cmd[i]);
-    }
-    printf("\n");
+	const uint8_t initialPartSize = 3;
+	uint8_t* cmd = malloc(initialPartSize);
+	if (cmd == NULL)
+	{
+		printf("\nCould not allocate memory for cmd.\n");
+		return -1;
+	}
+	cmd[0] = transmit_size;
+	cmd[1] = alias;
+	cmd[2] = motor_command;
 
-    size_t writtenBytes = fwrite(cmd, sizeof(uint8_t), sizeof(cmd), portHandle);
-    fflush(portHandle);
-    printf("Wrote %zd bytes.\n", writtenBytes);
+	uint32_t crcVal = crc32(cmd, initialPartSize);
 
-    const size_t recvSize = GetRecvCommandSize(motor_command);
+	uint8_t crcArr[4] = { 0 };
+	ConvertUintTo4BytesArr(crcArr, 4, ConvertUint32ToLittleEndian(crcVal));
 
-    if (alias == 255 || recvSize == 0)
-    {
-        /*
-          1. When sending the command to alias 255 we do not expect a response.
-          2. Some commands do not expect a response. (See the implementation of GetRecvCommandSize)
-        */
-        printf("No response is expected.\n");
-    }
-    else
-    {
-        uint8_t* recv_buffer = (uint8_t*)malloc(recvSize);
+	uint8_t* cmd_transmit = malloc(motor_command_length);
+	if (cmd_transmit == NULL)
+	{
+		printf("\nCould not allocate memory for cmd_transmit.\n");
+		return -1;
+	}
 
-        if (recv_buffer == NULL)
-        {
-            printf("Could not allocate memory for the receive buffer.\n");
-            return -1;
-        }
+	memcpy(cmd_transmit, cmd, initialPartSize);
+	memcpy(cmd_transmit + initialPartSize, crcArr, 4);
 
-        memset(recv_buffer, 0, recvSize);
+	memset(cmd, 0, initialPartSize);
+	free(cmd);
+	cmd = NULL;
 
-        size_t readBytes = fread(recv_buffer, sizeof(uint8_t),
-            recvSize, portHandle);
+	printf("Sending the following command: \n");
+	for (int i = 0; i < motor_command_length; i++)
+	{
+		printf("0x%x ", cmd_transmit[i]);
+	}
+	printf("\n");
 
-        if (readBytes != recvSize)
-        {
-            //do not return as we still need to clean up
-            printf("Command timed out or the response had a wrong size.\n");
-        }
-    
-        printf("Received: ");
-        for (int i = 0; i < recvSize; i++)
-        {
-            printf("0x%x ", recv_buffer[i]);
-        }
-        printf("\n");
+	size_t writtenBytes = fwrite(cmd_transmit, sizeof(uint8_t), motor_command_length, portHandle);
 
-        //always clean up the mess left by dynamic memory allocation
-        memset(recv_buffer, 0, recvSize);
-        free(recv_buffer);
-        recv_buffer = NULL;
-    }
+	memset(cmd_transmit, 0, motor_command_length);
+	free(cmd_transmit);
+	cmd_transmit = NULL;
 
-    printf("\n\n");
+	fflush(portHandle);
+	printf("Wrote %zd bytes.\n", writtenBytes);
 
-    fclose(portHandle);
+	const size_t recvSize = 6;//size(1) + crc_enabled(1) + crc32(4)
 
-    return 0;
+	if (alias == 255)
+	{
+		printf("No response is expected.\n");
+	}
+	else
+	{
+		uint8_t* recv_buffer = (uint8_t*)malloc(recvSize);
+
+		if (recv_buffer == NULL)
+		{
+			printf("Could not allocate memory for the receive buffer.\n");
+			fclose(portHandle);
+			return -1;
+		}
+
+		memset(recv_buffer, 0, recvSize);
+
+		size_t readBytes = fread(recv_buffer, sizeof(uint8_t),
+			recvSize, portHandle);
+
+		if (readBytes != recvSize)
+		{
+			//do not return as we still need to clean up
+			printf("Command timed out or the response had a wrong size.\n");
+		}
+
+		printf("Received: ");
+		for (int i = 0; i < recvSize; i++)
+		{
+			printf("0x%x ", recv_buffer[i]);
+		}
+		printf("\n");
+
+		memset(recv_buffer, 0, recvSize);
+		free(recv_buffer);
+		recv_buffer = NULL;
+	}
+
+	printf("\n\n");
+
+	fclose(portHandle);
+
+	return 0;
 }
 
 FILE* OpenPort(const char* serialPort)
 {
-    FILE* portHandle = fopen(serialPort, "rb+");
+	FILE* portHandle = fopen(serialPort, "rb+");
 
-    if (portHandle == NULL)
-    {
-        printf("Cannot open COM port.\n");
-    }
-    else
-    {
-        // Make sure there is no data waiting to be flushed after opening
-        fflush(portHandle);
-    }
+	if (portHandle == NULL)
+	{
+		printf("Cannot open COM port.\n");
+	}
+	else
+	{
+		// Make sure there is no data waiting to be flushed after opening
+		fflush(portHandle);
+	}
 
-    return portHandle;
-}
-
-enum Commands {
-    DisableMOSFETs,
-    EnableMOSFETs,
-    TrapezoidMove,
-    SetMaximumVelocity,
-    SetPositionAndFinishTime,
-    SetMaxAcceleration,
-    StartCalibration,
-    CaptureHallSensorData,
-    ResetTime,
-    GetCurrentTime,
-    TimeSync,
-    GetQueueSize,
-    EmergencyStop,
-    ZeroPosition,
-    Homing,
-    GetCurrentPosition,
-    GetStatus,
-    GoToClosedLoop,
-    GetUpdateFrequency,
-    MoveWithAcceleration,
-    DetectDevices,
-    SetDeviceAlias,
-    GetProductInfoCmd,
-    FirmWareUpgrade,
-    GetProductDescription,
-    GetFirmwareVersion,
-    MoveWithVelocity,
-    Reset,
-    SetMaxMotorCurrent,
-    MultiMove,
-    SetSafetyLimits,
-    Ping,
-    ControlHallSensorStatistics,
-    GetHallSensorStatistics,
-    Identify = 41,
-    AddToQueueTest = 254,
-};
-
-
-/*This method will map the number of receive bytes for each command */
-size_t GetRecvCommandSize(uint8_t cmdCode)
-{
-    const size_t None = 0;
-    const size_t SuccessResponse = 3;
-    const size_t Bytes1_8bits = 1;
-    const size_t Bytes2_16bits = 2;
-    const size_t Bytes4_32bits = 4;
-    const size_t Bytes6_48bits = 6;
-    const size_t Bytes8_64bits = 8;
-
-    switch (cmdCode)
-    {
-    case DisableMOSFETs:
-        return SuccessResponse;
-    case EnableMOSFETs:
-        return SuccessResponse;
-    case TrapezoidMove:
-        return SuccessResponse;
-    case SetMaximumVelocity:
-        return SuccessResponse;
-    case SetPositionAndFinishTime:
-        return SuccessResponse;
-    case SetMaxAcceleration:
-        return SuccessResponse;
-    case StartCalibration:
-        return None;
-    case CaptureHallSensorData:
-        return None;
-    case ResetTime:
-        return SuccessResponse;
-    case TimeSync:
-        return SuccessResponse + Bytes6_48bits;
-    case GetCurrentTime:
-        return SuccessResponse + Bytes6_48bits;
-    case GetQueueSize:
-        return SuccessResponse + Bytes1_8bits;
-    case EmergencyStop:
-        return SuccessResponse;
-    case ZeroPosition:
-        return SuccessResponse;
-    case Homing:
-        return SuccessResponse;
-    case GetCurrentPosition:
-        return SuccessResponse + Bytes4_32bits;
-    case GetStatus:
-        return SuccessResponse + Bytes1_8bits;
-    case GoToClosedLoop:
-        return SuccessResponse;
-    case GetUpdateFrequency:
-        return SuccessResponse + Bytes4_32bits;
-    case MoveWithAcceleration:
-        return SuccessResponse;
-    case DetectDevices:
-        return SuccessResponse + Bytes8_64bits + Bytes1_8bits + Bytes4_32bits;
-    case SetDeviceAlias:
-        return SuccessResponse;
-    case GetProductInfoCmd:
-        return None;
-    case FirmWareUpgrade:
-        return SuccessResponse;
-    case GetProductDescription:
-        return None;
-    case GetFirmwareVersion:
-        return SuccessResponse + Bytes4_32bits;
-    case MoveWithVelocity:
-        return SuccessResponse;
-    case Reset:
-        return None;
-    case SetMaxMotorCurrent:
-        return SuccessResponse;
-    case MultiMove:
-        return SuccessResponse;
-    case SetSafetyLimits:
-        return SuccessResponse;
-    case Ping:
-        return 13;
-    case ControlHallSensorStatistics:
-        return SuccessResponse;
-    case GetHallSensorStatistics:
-        return SuccessResponse + Bytes2_16bits + Bytes2_16bits + Bytes2_16bits + Bytes2_16bits +
-             Bytes2_16bits + Bytes2_16bits + Bytes8_64bits + Bytes8_64bits + Bytes8_64bits + Bytes4_32bits;
-    case Identify:
-        return SuccessResponse;
-    case AddToQueueTest:
-        return SuccessResponse;
-
-    default:
-        break;
-    }
-    return 0;
+	return portHandle;
 }
 
 /* This method will assure the port is in a valid state to be opened using the generic fopen
@@ -252,101 +155,182 @@ void SetupSerialPort()
 {
 #ifdef WIN32
 
-    HANDLE hComm = CreateFile(serialPortName,
-        GENERIC_READ | GENERIC_WRITE,
-        0,
-        NULL,
-        OPEN_EXISTING,
-        0,
-        NULL);
+	HANDLE hComm = CreateFile(serialPortName,
+		GENERIC_READ | GENERIC_WRITE,
+		0,
+		NULL,
+		OPEN_EXISTING,
+		0,
+		NULL);
 
-    if (hComm == INVALID_HANDLE_VALUE)
-    {
-        printf("Port %s is invalid, also make sure you set the read/write access writes.\n", serialPortName);
-        return;
-    }
+	if (hComm == INVALID_HANDLE_VALUE)
+	{
+		printf("Port %s is invalid, also make sure you set the read/write access writes.\n", serialPortName);
+		return;
+	}
 
-    //abort any read/writes and clear the input/output buffers
-    PurgeComm(hComm, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
+	//abort any read/writes and clear the input/output buffers
+	PurgeComm(hComm, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
 
-    DCB dcbSerialParams;
-    SecureZeroMemory(&dcbSerialParams, sizeof(DCB));
-    dcbSerialParams.DCBlength = sizeof(DCB);
+	DCB dcbSerialParams;
+	SecureZeroMemory(&dcbSerialParams, sizeof(DCB));
+	dcbSerialParams.DCBlength = sizeof(DCB);
 
-    dcbSerialParams.fBinary = TRUE;
-    dcbSerialParams.XoffLim = 0x4000;
-    dcbSerialParams.XonChar = 0x11;
-    dcbSerialParams.XoffChar = 0x13;
-    
-    dcbSerialParams.BaudRate = 230400;
-    dcbSerialParams.ByteSize = 8;
-    dcbSerialParams.StopBits = ONESTOPBIT;
-    dcbSerialParams.Parity = NOPARITY;
-    BOOL Status = SetCommState(hComm, &dcbSerialParams);
-    if (Status == FALSE)
-    {
-        printf("Cannot setup port %s.\n", serialPortName);
-        CloseHandle(hComm);
-        return;
-    }
+	dcbSerialParams.fBinary = TRUE;
+	dcbSerialParams.XoffLim = 0x4000;
+	dcbSerialParams.XonChar = 0x11;
+	dcbSerialParams.XoffChar = 0x13;
 
-    COMMTIMEOUTS timeouts;
-    SecureZeroMemory(&timeouts, sizeof(COMMTIMEOUTS));
-    GetCommTimeouts(hComm, &timeouts);
+	dcbSerialParams.BaudRate = 230400;
+	dcbSerialParams.ByteSize = 8;
+	dcbSerialParams.StopBits = ONESTOPBIT;
+	dcbSerialParams.Parity = NOPARITY;
+	BOOL Status = SetCommState(hComm, &dcbSerialParams);
+	if (Status == FALSE)
+	{
+		printf("Cannot setup port %s.\n", serialPortName);
+		CloseHandle(hComm);
+		return;
+	}
 
-    timeouts.ReadIntervalTimeout = MAXDWORD;
-    timeouts.ReadTotalTimeoutMultiplier = MAXDWORD;
-    //read timeout to 2 seconds
-    timeouts.ReadTotalTimeoutConstant = 2000;
-    timeouts.WriteTotalTimeoutMultiplier = 0;
-    timeouts.WriteTotalTimeoutConstant = 0;
+	COMMTIMEOUTS timeouts;
+	SecureZeroMemory(&timeouts, sizeof(COMMTIMEOUTS));
+	GetCommTimeouts(hComm, &timeouts);
 
-    if (!SetCommTimeouts(hComm, &timeouts))
-        printf("Error timeouts.\n");
+	timeouts.ReadIntervalTimeout = MAXDWORD;
+	timeouts.ReadTotalTimeoutMultiplier = MAXDWORD;
+	//read timeout to 2 seconds
+	timeouts.ReadTotalTimeoutConstant = 2000;
+	timeouts.WriteTotalTimeoutMultiplier = 0;
+	timeouts.WriteTotalTimeoutConstant = 0;
 
-    Sleep(500);
-    SecureZeroMemory(&dcbSerialParams, sizeof(DCB));
-    dcbSerialParams.DCBlength = sizeof(DCB);
+	if (!SetCommTimeouts(hComm, &timeouts))
+		printf("Error timeouts.\n");
 
-    GetCommState(hComm, &dcbSerialParams);
-    printf("Baudrate: %d\nStopBits: %d\nParity: %d\nByteSize: %d\n\n", 
-         dcbSerialParams.BaudRate,
-         dcbSerialParams.StopBits,
-         dcbSerialParams.Parity,
-         dcbSerialParams.ByteSize);
+	Sleep(500);
+	SecureZeroMemory(&dcbSerialParams, sizeof(DCB));
+	dcbSerialParams.DCBlength = sizeof(DCB);
 
-    CloseHandle(hComm);
+	GetCommState(hComm, &dcbSerialParams);
+	printf("Baudrate: %d\nStopBits: %d\nParity: %d\nByteSize: %d\n\n",
+		dcbSerialParams.BaudRate,
+		dcbSerialParams.StopBits,
+		dcbSerialParams.Parity,
+		dcbSerialParams.ByteSize);
+
+	CloseHandle(hComm);
 
 #else
 
-    /* Open and configure the serial port using posix calls */
-    int fd = open(serialPortName, O_RDWR | O_NOCTTY);
-    if (fd < 0)
-    {
-        printf("Port %s is invalid, also make sure you set the read/write access writes.\n", serialPortName);
-        return;
-    }
+	/* Open and configure the serial port using posix calls */
+	int fd = open(serialPortName, O_RDWR | O_NOCTTY);
+	if (fd < 0)
+	{
+		printf("Port %s is invalid, also make sure you set the read/write access writes.\n", serialPortName);
+		return;
+	}
 
-    struct termios options; /* Serial port settings */
-    memset(&options, 0, sizeof(struct termios));
+	struct termios options; /* Serial port settings */
+	memset(&options, 0, sizeof(struct termios));
 
-    /* Set up serial port
-    baudRate: 230400
-    StopBits: 1
-    Parity: None
-    DataBits 8 */
-    options.c_cflag = 6323;
-    options.c_iflag = IGNBRK;
-    options.c_oflag = 0;
-    options.c_lflag = 0;
+	/* Set up serial port
+	baudRate: 230400
+	StopBits: 1
+	Parity: None
+	DataBits 8 */
+	options.c_cflag = 6323;
+	options.c_iflag = IGNBRK;
+	options.c_oflag = 0;
+	options.c_lflag = 0;
 
-    /* Apply the settings */
-    tcflush(fd, TCIOFLUSH);//discard any input/output that may sit in the buffer
-    cfmakeraw(&options);
-    tcsetattr(fd, TCSANOW, &options);
-    usleep(500 * 1000);
+	/* Apply the settings */
+	tcflush(fd, TCIOFLUSH);//discard any input/output that may sit in the buffer
+	cfmakeraw(&options);
+	tcsetattr(fd, TCSANOW, &options);
+	usleep(500 * 1000);
 
-    close(fd);
+	close(fd);
 #endif
 
 }
+
+static const uint32_t bmask32[4] = { 0x0FF, 0xFF00, 0xFF0000, 0xFF000000 };
+static const uint64_t bmask64[8] = { 0xFF, 0xFF00, 0xFF0000, 0xFF000000, 0xFF00000000, 0xFF0000000000, 0xFF000000000000, 0xFF00000000000000 };
+
+uint32_t ConvertDoubleToUint32LittleEndian(const double input)
+{
+	uint32_t result = 0;
+
+	if (input < 0)
+	{
+		if (input < INT32_MIN)
+		{
+			return 0;
+		}
+
+		int32_t input_s = (int32_t)input;
+		result |= (input_s & bmask32[0]) << 24;
+		result |= (input_s & bmask32[1]) << 8;
+		result |= (input_s & bmask32[2]) >> 8;
+		result |= (input_s & bmask32[3]) >> 24;
+	}
+	else
+	{
+		if (input > UINT32_MAX)
+		{
+			return 0;
+		}
+
+		result = ConvertUint32ToLittleEndian((uint32_t)input);
+	}
+
+	return result;
+}
+
+uint32_t ConvertUint32ToLittleEndian(uint32_t input)
+{
+	uint32_t result = 0;
+
+	result |= (input & bmask32[0]) << 24;
+	result |= (input & bmask32[1]) << 8;
+	result |= (input & bmask32[2]) >> 8;
+	result |= (input & bmask32[3]) >> 24;
+
+	return result;
+}
+
+void ConvertUintTo4BytesArr(uint8_t* buffer, uint8_t buffSize, uint32_t number)
+{
+	if (buffSize != sizeof(uint32_t))
+	{
+		//assure the buffer size is 4 bytes
+		return;
+	}
+
+	for (int i = buffSize - 1, j = 0; i >= 0; i--, j++)
+	{
+		buffer[j] = (number & bmask32[i]) >> (i * 8);
+	}
+}
+
+void makeCRCTable()
+{
+	uint32_t c = 0;
+
+	for (uint32_t n = 0; n < 256; n++) {
+		c = n;
+		for (uint32_t k = 0; k < 8; k++) {
+			c = ((c & 1) ? (0xEDB88320 ^ (c >> 1)) : (c >> 1));
+		}
+		crcTable[n] = c;
+	}
+}
+
+uint32_t crc32(uint8_t* data, size_t length)
+{
+	uint32_t crc = 0 ^ -1;
+	for (int i = 0; i < length; i++) {
+		crc = (crc >> 8) ^ crcTable[(crc ^ data[i]) & 0xFF];
+	}
+	return crc ^ -1;
+};
