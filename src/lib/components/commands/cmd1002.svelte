@@ -2,7 +2,7 @@
 	import { Modal, SetModalComponent } from '../modal/modal.svelte';
 	import Model3d from '../modal/model-3d.svelte';
 	import FireworksImg from '$lib/images/fireworks.svg';
-	import MotorToRs232 from '$lib/images/motor-to-rs485.png';
+	import MotorToRs232 from '$lib/images/motor-to-rs485.webp';
 	import type { DetectedDeviceType, MotorCommandType } from '$lib/client-server-lib/types';
 	import Generic from './generic.svelte';
 	import { DetectedDevices, SelectedUniqueID } from '$lib/stores/global';
@@ -59,7 +59,7 @@
 				{@render Model3dBtn()}
 				.
 			</p>
-			<h4>Verify the motor spins (applicable M1 motor types only)</h4>
+			<p class="mt-10 text-xl font-bold">Verify the motor spins (applicable M1 motor types only)</p>
 			<p>
 				After you power on the motor and the green LED flashes slowly, you can press the rotate
 				button to make sure everything works as expected at this point.
@@ -95,16 +95,10 @@
 				A pins from the motor to the B A pins of the RS-485 adapter as shown in the figure below.
 			</p>
 			<div class="flex w-full justify-center">
-				<img
-					class="h-auto"
-					loading="eager"
-					src={MotorToRs232}
-					sizes="100vw"
-					width={600}
-					alt="motor to rs-485 wiring"
-				/>
+				<img class="" src={MotorToRs232} width={600} height="auto" alt="motor to rs-485 wiring" />
 			</div>
-			<h4>Driver installation</h4>
+
+			<p class="mt-10 text-xl font-bold">Driver installation</p>
 			<p>
 				The RS-485 adapter requires its driver software, installation steps differ based on the
 				manufacturer, some require explicit installation(the driver must be downloaded manually from
@@ -112,7 +106,7 @@
 				in. We advise you to do your own research on how to accomplish this step based on the
 				product you own.
 			</p>
-			<h4>Verify the connection</h4>
+			<p class="mt-10 text-xl font-bold">Verify the connection</p>
 			<p>
 				At this point, the motor is physically connected to the RS-485 adapter and the RS-485
 				adapter is plugged into your PC.
@@ -197,8 +191,8 @@
 					the current state by clicking on the received output bytes, thus helping you diagnose issues
 					faster or understand what happened.
 					<br />
-					Read more about the GET STATUS command{' '}
-					<a href="/docs/16">here</a>.
+					Read more about the 
+					<a href="/docs/16"> GET STATUS command</a>.
 				</li>
 				<li>Clear: press this button to clear the Log Window.</li>
 			</ol>
@@ -234,6 +228,7 @@
 			<div class="flex w-full justify-center">
 				<select
 					class="select select-sm"
+					aria-label="select your device"
 					bind:value={selectedDevice}
 					onchange={() => {
 						if (typeof selectedDevice == 'string') {
