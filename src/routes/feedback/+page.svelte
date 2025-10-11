@@ -1,6 +1,6 @@
 <script lang="ts">
-	import BoyImg from '$lib/images/feedback_left_boy.png';
-	import GirlImg from '$lib/images/feedback_right_girl.png';
+	import BoyImg from '$lib/images/feedback_left_boy.webp';
+	import GirlImg from '$lib/images/feedback_right_girl.webp';
 	import FeedbackSent from '$lib/images/feedback_sent.svg';
 	import ErrorImg from '$lib/images/error.svg';
 	import JSZip from 'jszip';
@@ -93,6 +93,8 @@
 			height={0}
 			src={BoyImg}
 			alt="boy illustration"
+			loading="eager"
+			fetchpriority="high"
 		/>
 		<img
 			class="h-auto w-[50%] max-w-[500px]"
@@ -100,12 +102,16 @@
 			height={0}
 			src={GirlImg}
 			alt="girl illustration"
+			loading="eager"
+			fetchpriority="high"
 		/>
 	</div>
 	<a class="link mt-5" href="/docs/1002">Go to docs</a>
 
 	<div class=" mt-5 w-full text-center">
-		<p class="feedbackTextColor text-center text-4xl md:text-5xl lg:text-6xl 2xl:text-7xl">
+		<p
+			class="feedbackTextColor to-primary/30 from-primary/100 bg-gradient-to-r bg-clip-text text-center text-4xl text-transparent md:text-5xl lg:text-6xl 2xl:text-7xl"
+		>
 			We care.
 		</p>
 		<p class="feedbackTextColor text-center text-4xl md:text-5xl lg:text-6xl 2xl:text-7xl">
@@ -166,3 +172,13 @@
 		</button>
 	</form>
 </div>
+
+<style>
+	/* .feedbackTextColor {
+		font-weight: bold;
+		background: -webkit-linear-gradient(360deg, #74bf44, rgba(116, 191, 68, 0.6));
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+	} */
+</style>

@@ -95,7 +95,15 @@
 				A pins from the motor to the B A pins of the RS-485 adapter as shown in the figure below.
 			</p>
 			<div class="flex w-full justify-center">
-				<img class="" src={MotorToRs232} width={600} height="auto" alt="motor to rs-485 wiring" />
+				<img
+					class=""
+					src={MotorToRs232}
+					width={600}
+					height="auto"
+					alt="motor to rs-485 wiring"
+					loading="lazy"
+					fetchpriority="low"
+				/>
 			</div>
 
 			<p class="mt-10 text-xl font-bold">Driver installation</p>
@@ -191,7 +199,7 @@
 					the current state by clicking on the received output bytes, thus helping you diagnose issues
 					faster or understand what happened.
 					<br />
-					Read more about the 
+					Read more about the
 					<a href="/docs/16"> GET STATUS command</a>.
 				</li>
 				<li>Clear: press this button to clear the Log Window.</li>
@@ -374,11 +382,13 @@
 					on your own.
 				</h2>
 				<img
+					loading="lazy"
 					class="h-auto w-[200px]"
 					src={FireworksImg}
 					width={300}
 					height={300}
 					alt="congratulations"
+					fetchpriority="low"
 				/>
 			</div>
 		</article>
