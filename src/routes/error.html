@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en" data-theme="night" id="root-html">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+		<link rel="apple-touch-icon" href="%sveltekit.assets%/favicon.png" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content="Gearotons" lang="en" />
+		<meta name="description" content="Servo motors" lang="en" />
+		<meta name="description" content="Electric Motors" lang="en" />
+		<meta name="description" content="UART commanded servo motors" lang="en" />
+
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap"
+			rel="stylesheet"
+		/>
+
+		%sveltekit.head%
+	</head>
+
+	<body data-sveltekit-preload-data="hover">
+		<div class="flex h-screen w-screen flex-col items-center justify-center">
+			<p class="my-20 text-xl">%sveltekit.status%</p>
+			<p class="text-lg">%sveltekit.error.message%</p>
+		</div>
+	</body>
+</html>

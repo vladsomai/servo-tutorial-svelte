@@ -2,7 +2,7 @@
 	import BoyImg from '$lib/images/feedback_left_boy.png';
 	import GirlImg from '$lib/images/feedback_right_girl.png';
 	import FeedbackSent from '$lib/images/feedback_sent.svg';
-	import FeedbackError from '$lib/images/feedback_error.svg';
+	import ErrorImg from '$lib/images/error.svg';
 	import JSZip from 'jszip';
 	import { firebaseFileStorage, firebaseStore } from '../../hooks.client';
 	import { addDoc, collection } from 'firebase/firestore';
@@ -69,7 +69,7 @@
 					'It seems our servers are currently down. We work on solving it.'
 				],
 				Title: 'Feedback could not be sent!',
-				Image: FeedbackError
+				Image: ErrorImg
 			});
 			SetModalComponent(GenericModal);
 			Modal.Dialog?.showModal();
@@ -153,7 +153,10 @@
 				name="attachment"
 			/>
 		</label>
-		<button class={`btn btn-primary btn-md mx-auto mt-5 max-w-[220px]`} disabled={waitingFeedbackReply}>
+		<button
+			class={`btn btn-primary btn-md mx-auto mt-5 max-w-[220px]`}
+			disabled={waitingFeedbackReply}
+		>
 			{#if waitingFeedbackReply}
 				<span class="loading loading-dots"></span>
 				<span>Sending feedback</span>

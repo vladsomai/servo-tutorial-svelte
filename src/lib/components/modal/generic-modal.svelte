@@ -15,13 +15,8 @@
 				{/each}
 			{/if}
 		</div>
-		{#if Modal.Content.Image}
-			<img
-				src={Modal.Content.Image == '' ? DefaultImage : Modal.Content.Image}
-				class="mt-10 h-3/6 w-3/6"
-				alt="modal"
-				lang="ro"
-			/>
+		{#if Modal.Content.Image && Modal.Content.Image != ''}
+			<img src={Modal.Content.Image} class="mt-10 max-w-[200px]" alt="modal" />
 		{/if}
 	{/if}
 </div>

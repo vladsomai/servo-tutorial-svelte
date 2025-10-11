@@ -10,7 +10,8 @@ import { ExecuteGenericCommand } from "$lib/components/commands/commands"
 import { initializeApp } from 'firebase/app'
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { SetCurrentUser } from "$lib/stores/global-state.svelte";
 
 export const handleError: HandleClientError = async (obj) => {
     console.log("Client handleError:", obj)
@@ -89,3 +90,11 @@ export const firebaseApp = initializeApp(firebaseConfig);
 export const firebaseStore = getFirestore(firebaseApp);
 export const firebaseFileStorage = getStorage(firebaseApp);
 export const firebaseAuth = getAuth(firebaseApp);
+
+onAuthStateChanged(firebaseAuth, async (_user) => {
+    if (_user) {
+        SetCurrentUser(_user)
+    } else {
+        SetCurrentUser(_user)
+    }
+});

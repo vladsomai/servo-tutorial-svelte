@@ -87,3 +87,4 @@ export interface LogWindowType {
     Logs: LogType[] | LogCommandType[]
 }
 
+export type FeedbackType = { id: string, email: string; message: string, downloadURL: string | null, date: Date };

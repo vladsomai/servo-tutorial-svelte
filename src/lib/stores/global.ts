@@ -7,3 +7,5 @@ export const ShowLogTimestamp = writable<boolean>(false)
 export const SelectedAxis = writable<string>("255")
 export const DetectedDevices = writable<DetectedDeviceType[]>([])
 export const SelectedUniqueID = writable<string>("")
+
+console.log("Global store is defined")
