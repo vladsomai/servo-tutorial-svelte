@@ -13,8 +13,18 @@ export const SupportedThemes: ThemeType[] = [
     { SiteTheme: "cupcake", CodeTheme: "github-light" },
 ]
 
-export type SupportedCodeLangs = "javascript" | "c" | "python"
-export const SupportedLanguages: SupportedCodeLangs[] = ["javascript", "c", "python"]
+export type SupportedCodeLangsStr = "html" | "c" | "python"
+
+export interface SupportedCodeLangs {
+    Description: string,
+    Language: SupportedCodeLangsStr
+}
+
+export const SupportedLanguages: SupportedCodeLangs[] = [
+    { Description: "Web", Language: "html" },
+    { Description: "C", Language: "c" },
+    { Description: "Python", Language: "python" }
+]
 
 export const GetCurrentBrowser = (): 'Opera' | 'Edge' | 'Chrome' | 'Safari' | 'Firefox' | 'IE' | 'unknown' => {
     if (

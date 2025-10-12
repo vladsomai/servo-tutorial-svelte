@@ -37,7 +37,7 @@
 <div class="fab">
 	<!-- a focusable div with tabindex is necessary to work on all browsers. role="button" is necessary for accessibility -->
 	<div tabindex="0" role="button" class="btn btn-lg btn-circle btn-ghost">
-		<img src={ThemeIcon} class="" alt="Pick a theme" width="40px" height="40px" />
+		<img src={ThemeIcon} class="" alt="Choose a theme" width="40px" height="40px" />
 	</div>
 
 	<!-- Main Action button replaces the original button when FAB is open -->
@@ -46,7 +46,7 @@
 			><img
 				src={ThemeIcon}
 				class="rotate-90"
-				alt="Pick a theme"
+				alt="Choose a theme"
 				width="40px"
 				height="40px"
 			/></button

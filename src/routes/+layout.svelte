@@ -13,6 +13,7 @@
 	import { Modal } from '$lib/components/modal/modal.svelte';
 	import { HandleOutputMap, M3 } from '$lib/components/commands/commands';
 	import Toast from '$lib/components/toast/toast.svelte';
+	import ChatButton from '$lib/components/gora/chat-button.svelte';
 
 	let { children, data } = $props();
 
@@ -23,7 +24,7 @@
 			$DetectedDevices = [{ UniqueID: uniqueId, Alias: parseInt(alias, 16) }];
 		}
 		HandleOutputMap.set(20, HandleDetectDevicesResponse);
-		
+
 		const showTimestampStr = GetCookie(SupportedCookies.ShowLogTimestamp);
 		if (showTimestampStr != null) {
 			const showTimestamp = showTimestampStr.toLowerCase() === 'true';
@@ -94,13 +95,11 @@
 	{@render children()}
 </div>
 
-<div class="fixed bottom-[50px] right-[50px]">
-	<ThemeSelector />
-</div>
+<ThemeSelector />
 
 {#if dev}
 	<div
-		class="bg-base-300 fixed bottom-[50px] z-[2000] flex h-[50px] w-[100px] flex-col items-center justify-center rounded-2xl"
+		class="bg-base-300 fixed bottom-[50px] z-50 flex h-[50px] w-[100px] flex-col items-center justify-center rounded-2xl"
 	>
 		<p>{innerWidth} px</p>
 		{#if innerWidth > 1536}

@@ -11,7 +11,7 @@
 	import {
 		ConvertAxisToNum,
 		SupportedLanguages,
-		type SupportedCodeLangs
+		type SupportedCodeLangsStr
 	} from '$lib/client-server-lib/utils';
 	import { GenericCodeExample } from '$lib/client-server-lib/code-samples-utils/code-utils';
 	let { currentCommand }: { currentCommand: MotorCommandType } = $props();
@@ -39,7 +39,7 @@
 					const { createHighlighter } = await import('shiki');
 					const highlighter = await createHighlighter({
 						themes: ['github-dark-dimmed', 'github-light', 'tokyo-night', 'material-theme-ocean'],
-						langs: ['javascript', 'c', 'python']
+						langs: ['html', 'c', 'python']
 					});
 
 					SetCodeHighlighter(highlighter);
@@ -112,11 +112,13 @@
 				class="select select-neutral rounded-b-none rounded-t-2xl border-0"
 				onchange={(e: Event) => {
 					const elem = e.target as HTMLSelectElement;
-					SetCodeHighlightLang(elem.value as SupportedCodeLangs);
+					SetCodeHighlightLang(elem.value as SupportedCodeLangsStr);
 				}}
 			>
 				{#each SupportedLanguages as lang}
-					<option value={lang}>{lang.slice(0, 1).toUpperCase()}{lang.slice(1)}</option>
+					<option value={lang.Language}>
+						{lang.Description}
+					</option>
 				{/each}
 			</select>
 		</div>

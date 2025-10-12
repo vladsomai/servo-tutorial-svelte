@@ -1,5 +1,5 @@
 
-import type { SupportedCodeLangs } from "../utils";
+import type { SupportedCodeLangsStr } from "../utils";
 import { changeAliasClangCode, changeCommandClangCode } from "./c-code-utils";
 import { changeAliasPythonCode, changeCommandPythonCode } from "./python-code-utils";
 import { changeAliasWebCode, changeCommandWebCode } from "./web-code-utils";
@@ -7,13 +7,13 @@ import { changeAliasWebCode, changeCommandWebCode } from "./web-code-utils";
 export class GenericCodeExample {
     // The geneirc Code Example only changes the Alias and the Command number of each command
 
-    static async GetNewCode(alias: number, command: number, lang: SupportedCodeLangs): Promise<string> {
+    static async GetNewCode(alias: number, command: number, lang: SupportedCodeLangsStr): Promise<string> {
 
         const res = await fetch(`/code-samples/${lang}/generic.txt`);
         const codeText = await res.text();
 
         switch (lang) {
-            case "javascript":
+            case "html":
                 return this.GetNewWebCode(alias, command, codeText)
             case "c":
                 return this.GetNewCCode(alias, command, codeText)

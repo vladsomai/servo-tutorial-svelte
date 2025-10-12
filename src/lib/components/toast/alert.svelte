@@ -22,9 +22,10 @@
 			default:
 				break;
 		}
+		return res;
 	});
 </script>
 
-<div class={`alert ${alertType} alert-info`}>
+<div class={`alert ${alertType}`}>
 	<span>{toast.Message}</span>
 </div>

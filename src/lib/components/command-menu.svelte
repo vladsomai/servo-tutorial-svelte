@@ -3,6 +3,7 @@
 	import Icon from '@iconify/svelte';
 	import { GlobalMotorCommandsGrouped, GlobalMotorCommandsMap } from '../../hooks.client';
 	import { page } from '$app/state';
+	import ChatButton from './gora/chat-button.svelte';
 
 	const commandGroups = GlobalMotorCommandsGrouped.size;
 
@@ -153,4 +154,5 @@
 			</li>
 		{/each}
 	</ul>
+	<ChatButton />
 </div>

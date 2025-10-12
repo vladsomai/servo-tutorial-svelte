@@ -1,14 +1,14 @@
-import type { SupportedCodeLangs } from "$lib/client-server-lib/utils"
+import type { SupportedCodeLangs, SupportedCodeLangsStr } from "$lib/client-server-lib/utils"
 import { type BundledLanguage, type BundledTheme, type HighlighterGeneric } from "shiki"
 
 export interface CodeHighlightType {
-    Lang: SupportedCodeLangs,
+    Lang: SupportedCodeLangsStr,
     CodeText: string,
     Highlighter: HighlighterGeneric<BundledLanguage, BundledTheme> | null
 }
 
 export const CodeHighlightObject: CodeHighlightType = $state({
-    Lang: "javascript",
+    Lang: "html",
     CodeText: "",
     Highlighter: null
 })
@@ -17,7 +17,7 @@ export function SetCodeHighlightText(newCodeText: string) {
     CodeHighlightObject.CodeText = newCodeText
 }
 
-export function SetCodeHighlightLang(newLang: SupportedCodeLangs) {
+export function SetCodeHighlightLang(newLang: SupportedCodeLangsStr) {
     CodeHighlightObject.Lang = newLang
 }
 

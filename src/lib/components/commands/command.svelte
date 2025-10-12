@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { MotorCommandType } from '$lib/client-server-lib/types';
 	import CmdNotImplemented from './cmd-not-implemented.svelte';
 	import { CommandsWithShortcuts, M3 } from './commands';
 	import { Modal, SetModalComponent, SetModalContent } from '../modal/modal.svelte';
@@ -9,7 +8,6 @@
 	import { GlobalMotorCommandsMap } from '../../../hooks.client';
 	import { page } from '$app/state';
 	import SelectAxis from '../select-axis.svelte';
-
 	let currentCommand = $derived(GlobalMotorCommandsMap.get(page.data.CommandId));
 </script>
 
