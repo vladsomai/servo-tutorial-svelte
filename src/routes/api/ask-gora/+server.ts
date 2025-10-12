@@ -24,7 +24,7 @@ export const GET = (async (event) => {
 
         const reply = await Gemini.AskGemini(prompt).catch(err => {
             console.log(err)
-            return "Ask Gora rejected"
+            return "An error occurred."
         })
 
         return json({ Reply: reply })
