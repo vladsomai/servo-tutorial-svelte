@@ -98,10 +98,10 @@
 
 {#if showChat}
 	<div
-		class="bg-base-300 fixed bottom-0 left-0 z-[100] m-3 flex h-[70vh] w-[50vw] flex-col justify-end rounded-2xl p-3"
+		class="bg-base-300 fixed bottom-0 left-0 z-[100] m-3 flex min-h-[70vh] w-[50vw] flex-col justify-end rounded-2xl p-3"
 		transition:slide={{ duration: 500, axis: 'y', easing: cubicIn }}
 	>
-		<div class="absolute right-0 top-0">
+		<div class="absolute right-0 top-0 z-10">
 			<button
 				class="btn btn-ghost rounded-full"
 				onclick={() => {
@@ -121,7 +121,7 @@
 				</p>
 				<svg
 					fill="currentColor"
-					class="h-[200px] w-[50vw]"
+					class="max-h-[150px] w-[50vw]"
 					preserveAspectRatio="none"
 					version="1.1"
 					xmlns="http://www.w3.org/2000/svg"
