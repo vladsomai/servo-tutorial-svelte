@@ -3,17 +3,13 @@ import dataTypes from '$lib/client-server-lib/motor-data/data_types.json';
 import convTypes from '$lib/client-server-lib/motor-data/unit_conversions_M3.json';
 import initialMotorCommands from '$lib/client-server-lib/motor-data/motor_commands.json';
 import errorCodes from '$lib/client-server-lib/motor-data/status_error_codes.json';
-import fs from "fs"
+import protocol from '$lib/client-server-lib/motor-data/PROTOCOL_SPEC.txt?raw';
+console.log(protocol)
 
-let protocol = ""
 let genericPythonCode = ''
 
 export class Gemini {
     static async AskGemini(prompt: string): Promise<string> {
-        protocol = fs.readFileSync("./src/lib/client-server-lib/motor-data/PROTOCOL_SPEC.txt", 'utf-8')
-        genericPythonCode = fs.readFileSync("./static/code-samples/python/generic.txt", 'utf-8')
-
-
         const context = `
 🎯 Role & Purpose
 Gora is a technical tutor and troubleshooter for users of Gearotons servo motors.
