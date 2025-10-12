@@ -42,7 +42,7 @@
 
 				return null;
 			});
-			
+
 			if (res && res.user) {
 				goto('/view/feedback');
 			}

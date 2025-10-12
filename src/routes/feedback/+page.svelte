@@ -4,13 +4,21 @@
 	import FeedbackSent from '$lib/images/feedback_sent.svg';
 	import ErrorImg from '$lib/images/error.svg';
 	import JSZip from 'jszip';
-	import { firebaseFileStorage, firebaseStore } from '../../hooks.client';
+	import { type Firestore } from 'firebase/firestore';
+	import { type FirebaseStorage } from 'firebase/storage';
+	import { firebaseApp } from '../../hooks.client';
 	import { addDoc, collection } from 'firebase/firestore';
 	import { ref, uploadBytes } from 'firebase/storage';
 	import { Modal, SetModalComponent, SetModalContent } from '$lib/components/modal/modal.svelte';
 	import GenericModal from '$lib/components/modal/generic-modal.svelte';
+	import { onMount } from 'svelte';
+	import { AddToast } from '$lib/components/toast/toast-state.svelte';
+	import { ToastLevel } from '$lib/client-server-lib/types';
 
-	const maxCharactersFeedbackInput = 3000; //do not allow the feedback to get higher than 10k chars
+	let firebaseStore: Firestore | null = null;
+	let firebaseFileStorage: FirebaseStorage | null = null;
+
+	const maxCharactersFeedbackInput = 3000;
 
 	let innerWidth = $state(0);
 	let attachmentInputElem: HTMLInputElement | null = $state(null);
@@ -18,9 +26,29 @@
 	let feedbackTextInputLeft = $state(maxCharactersFeedbackInput);
 	let feedbackTextInput = $state('');
 
+	onMount(() => {
+		async function loadFirebaseDeps() {
+			const { getFirestore } = await import('firebase/firestore');
+			firebaseStore = getFirestore(firebaseApp);
+
+			const { getStorage } = await import('firebase/storage');
+			firebaseFileStorage = getStorage(firebaseApp);
+
+			console.log('Firebase loaded');
+		}
+
+		loadFirebaseDeps();
+	});
+
 	async function sendFeedback(e: any) {
 		e.preventDefault();
-		if (attachmentInputElem == null) return;
+		if (attachmentInputElem == null || firebaseStore == null || firebaseFileStorage == null) {
+			AddToast({
+				Level: ToastLevel.Error,
+				Message: ['An error occurred, please contact us via email!']
+			});
+			return;
+		}
 
 		waitingFeedbackReply = true;
 

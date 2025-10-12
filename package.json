@@ -44,7 +44,7 @@
 	},
 	"dependencies": {
 		"@floating-ui/dom": "^1.7.4",
-		"babylonjs": "^8.23.1",
+		"babylonjs": "^8.31.0",
 		"babylonjs-loaders": "^8.23.1",
 		"daisyui": "^5.1.25",
 		"firebase": "^12.4.0",

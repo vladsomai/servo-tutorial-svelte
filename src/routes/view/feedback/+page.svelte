@@ -2,15 +2,16 @@
 	import { goto } from '$app/navigation';
 	import { UserStateObj } from '$lib/stores/global-state.svelte';
 	import { onMount } from 'svelte';
-	import { firebaseAuth, firebaseFileStorage, firebaseStore } from '../../../hooks.client';
+	import { firebaseAuth, firebaseApp } from '../../../hooks.client';
 	import { signOut } from 'firebase/auth';
-	import DeleteIcon from '$lib/images/icons/delete.svg';
-	import { collection, deleteDoc, doc, getDocs } from 'firebase/firestore';
+	import { collection, deleteDoc, doc, type Firestore, getDocs } from 'firebase/firestore';
 	import { ToastLevel, type FeedbackType } from '$lib/client-server-lib/types';
-	import { getDownloadURL, ref } from 'firebase/storage';
+	import { getDownloadURL, ref, type FirebaseStorage } from 'firebase/storage';
 	import { AddToast } from '$lib/components/toast/toast-state.svelte';
 
-	let innerWidth = $state(0);
+	let firebaseStore: Firestore | null = null;
+	let firebaseFileStorage: FirebaseStorage | null = null;
+
 	let signingOut = $state(false);
 	let timeoutLoadingUser: NodeJS.Timeout | null = null;
 
@@ -19,6 +20,22 @@
 	let loadingFeedbacks = $state(true);
 
 	onMount(() => {
+		async function loadFirebaseDeps() {
+			const { getFirestore } = await import('firebase/firestore');
+			firebaseStore = getFirestore(firebaseApp);
+
+			const { getStorage } = await import('firebase/storage');
+			firebaseFileStorage = getStorage(firebaseApp);
+
+			console.log('Firebase loaded');
+
+			if (UserStateObj.CurrentUser) {
+				getFeedbacks();
+			}
+		}
+
+		loadFirebaseDeps();
+
 		timeoutLoadingUser = setTimeout(() => {
 			if (UserStateObj.CurrentUser == null) {
 				goto('/signin');
@@ -33,15 +50,26 @@
 	});
 
 	$effect(() => {
+		//When the user gets updated, clear the timeout
 		if (UserStateObj.CurrentUser && timeoutLoadingUser) {
 			clearTimeout(timeoutLoadingUser);
-			getFeedbacks();
+
+			if (firebaseStore && firebaseFileStorage) {
+				getFeedbacks();
+			}
 		}
 	});
 
 	async function signout() {
-		await signOut(firebaseAuth);
-		goto('/signin');
+		signingOut = true;
+		try {
+			await signOut(firebaseAuth).catch((err) => {
+				console.log('Error signing out', err);
+			});
+			goto('/signin');
+		} finally {
+			signingOut = false;
+		}
 	}
 
 	async function handleSearchChanged(e: Event) {
@@ -57,10 +85,18 @@
 	}
 
 	async function handleDownlaod(url: string) {
-		goto(url);
+		window.open(url, '_blank');
 	}
 
 	async function deleteFeedback(feedback: any, index: number) {
+		if (firebaseStore == null || firebaseFileStorage == null) {
+			AddToast({
+				Level: ToastLevel.Error,
+				Message: ['An error occurred, please contact us via email!']
+			});
+			return;
+		}
+
 		const deleteConfirmed = confirm(
 			`You are going to delete feedback with index ${index + 1}, proceed?`
 		);
@@ -77,6 +113,20 @@
 	}
 
 	async function getFeedbacks() {
+		if (UserStateObj.CurrentUser == null) {
+			return;
+		}
+
+		if (firebaseStore == null || firebaseFileStorage == null) {
+			AddToast({
+				Level: ToastLevel.Error,
+				Message: ['An error occurred, please contact us via email!']
+			});
+			return;
+		}
+
+		console.log('Effect running');
+
 		loadingFeedbacks = true;
 		try {
 			const querySnapshot = await getDocs(collection(firebaseStore, 'feedbacks'));
@@ -98,6 +148,14 @@
 					};
 
 					try {
+						if (firebaseFileStorage == null) {
+							AddToast({
+								Level: ToastLevel.Error,
+								Message: ['An error occurred, please contact us via email!']
+							});
+							return;
+						}
+
 						//get all the links to zip file download for each feedback
 						const pathReference = ref(firebaseFileStorage, `${doc.id}.zip`);
 
@@ -129,8 +187,6 @@
 		}
 	}
 </script>
-
-<svelte:window bind:innerWidth />
 
 {#if UserStateObj.CurrentUser == null}
 	<div class="flex h-screen w-screen items-center justify-center">

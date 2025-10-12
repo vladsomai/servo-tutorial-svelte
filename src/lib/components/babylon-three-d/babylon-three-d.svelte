@@ -1,7 +1,7 @@
 <script lang="ts">
-	import * as BABYLON from 'babylonjs';
-	import 'babylonjs-loaders';
 	import { onMount } from 'svelte';
+
+	let BABYLON: any = null;
 
 	interface ILoadingScreen {
 		//What happens when loading starts
@@ -50,7 +50,7 @@
 			const camera = new BABYLON.UniversalCamera('camera1', new BABYLON.Vector3(0, 0, 0), scene);
 			camera.attachControl(canvas, true);
 
-			BABYLON.SceneLoader.Append('/', sceneFileName, scene, function (scene) {
+			BABYLON.SceneLoader.Append('/', sceneFileName, scene, function (scene: any) {
 				scene.createDefaultCamera(true, true, true);
 				let helper = scene.createDefaultEnvironment({
 					enableGroundMirror: true,
@@ -80,28 +80,29 @@
 	let loadingDiv: HTMLDivElement | null = $state(null);
 
 	onMount(() => {
-		CustomLoadingScreen.setLoadingDiv(loadingDiv);
-		const { scene, engine } = Playground.CreateScene(
-			canvas as HTMLCanvasElement,
-			glbFileName,
-			cameraAlpha,
-			cameraBeta,
-			cameraRadius
-		);
+		async function importBabylon() {
+			BABYLON = await import('babylonjs');
+			await import('babylonjs-loaders');
 
-		function handleResize() {
-			engine.resize();
+			CustomLoadingScreen.setLoadingDiv(loadingDiv);
+			const { scene, engine } = Playground.CreateScene(
+				canvas as HTMLCanvasElement,
+				glbFileName,
+				cameraAlpha,
+				cameraBeta,
+				cameraRadius
+			);
 		}
 
-		window.addEventListener('resize', handleResize);
-		return () => {
-			window.removeEventListener('resize', handleResize);
-		};
+		importBabylon();
 	});
 </script>
 
 <div class="flex flex-col items-center justify-center rounded-2xl">
-	<div bind:this={loadingDiv} class="flex flex-col items-center justify-center rounded-2xl mt-2 min-h-[500px] absolute">
+	<div
+		bind:this={loadingDiv}
+		class="absolute mt-2 flex min-h-[500px] flex-col items-center justify-center rounded-2xl"
+	>
 		<progress class="progress progress-primary"></progress>
 		<p class="mt-5 text-3xl">Loading 3D assets...</p>
 	</div>

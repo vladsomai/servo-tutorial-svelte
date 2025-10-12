@@ -8,8 +8,6 @@ import { GetFuncNameFromCmdString } from "$lib/client-server-lib/utils";
 import { M3 } from "$lib/components/commands/commands";
 import { ExecuteGenericCommand } from "$lib/components/commands/commands"
 import { initializeApp } from 'firebase/app'
-import { getFirestore } from 'firebase/firestore'
-import { getStorage } from 'firebase/storage'
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { SetCurrentUser } from "$lib/stores/global-state.svelte";
 
@@ -87,8 +85,6 @@ export const firebaseConfig = {
 
 // Initialize Firebase
 export const firebaseApp = initializeApp(firebaseConfig);
-export const firebaseStore = getFirestore(firebaseApp);
-export const firebaseFileStorage = getStorage(firebaseApp);
 export const firebaseAuth = getAuth(firebaseApp);
 
 onAuthStateChanged(firebaseAuth, async (_user) => {
