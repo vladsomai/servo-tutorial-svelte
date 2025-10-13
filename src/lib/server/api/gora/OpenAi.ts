@@ -19,7 +19,7 @@ export class ServerOpenAi implements IGoraApi {
                 const response = await openai.responses.create({
                     prompt: {
                         "id": "pmpt_68ecaf50a6b48194afdc2fb2eba15ce80c7edac36514e09a",
-                        "version": "8"
+                        "version": "9"
                     },
                     reasoning: { effort: "minimal" },
                     input: conversation,
