@@ -13,7 +13,6 @@
 	import { Modal } from '$lib/components/modal/modal.svelte';
 	import { HandleOutputMap, M3 } from '$lib/components/commands/commands';
 	import Toast from '$lib/components/toast/toast.svelte';
-	import ChatButton from '$lib/components/gora/chat-button.svelte';
 
 	let { children, data } = $props();
 

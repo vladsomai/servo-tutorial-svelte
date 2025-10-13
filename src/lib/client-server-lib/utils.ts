@@ -338,3 +338,16 @@ export function GetNoOfBytesForParam(param: InputOutputObjects): number {
 
     return noOfBytes.ByteSize
 }
+
+export function IsValidString(obj: any): boolean {
+
+    if (obj == null ||
+        typeof obj != 'string' ||
+        obj == ''
+
+    ) {
+        return false;
+    }
+
+    return true
+}

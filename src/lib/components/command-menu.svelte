@@ -109,6 +109,7 @@
 			></svg
 		>
 	</a>
+	<ChatButton />
 
 	<input
 		bind:value={searchText}
@@ -154,5 +155,4 @@
 			</li>
 		{/each}
 	</ul>
-	<ChatButton />
 </div>

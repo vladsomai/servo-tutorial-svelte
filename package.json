@@ -48,6 +48,7 @@
 		"babylonjs-loaders": "^8.23.1",
 		"daisyui": "^5.1.25",
 		"firebase": "^12.4.0",
-		"jszip": "^3.10.1"
+		"jszip": "^3.10.1",
+		"openai": "^6.3.0"
 	}
 }

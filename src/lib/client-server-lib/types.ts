@@ -88,3 +88,9 @@ export interface LogWindowType {
 }
 
 export type FeedbackType = { id: string, email: string; message: string, downloadURL: string | null, date: Date };
+
+export type ConversationRoleType = "user" | "assistant"
+export interface ConversationType {
+    role: ConversationRoleType,
+    content: string
+}
