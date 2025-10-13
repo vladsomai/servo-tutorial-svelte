@@ -7,28 +7,16 @@
 		type ConversationRoleType,
 		type ConversationType
 	} from '$lib/client-server-lib/types';
-	import { sleep } from '$lib/client-server-lib/utils';
 	import { cubicIn } from 'svelte/easing';
-	import {
-		computePosition,
-		type ReferenceElement,
-		type FloatingElement,
-		offset,
-		flip as floatinguiflip,
-		shift
-	} from '@floating-ui/dom';
 	import { ClientGoraApi } from '$lib/client-server-lib/api/gora/Gora';
 	import { flip } from 'svelte/animate';
 
 	const maxCharactersInput = 1000;
 	let charsLeft = $state(maxCharactersInput);
 
-	let showChat = $state(false);
+	let showChat = $state(true);
 	let waitingForGora = $state(false);
 	let chatDiv: HTMLDivElement | null = $state(null);
-
-	let floatingElem: HTMLElement | null = $state(null);
-	let floatingStyles = $state('');
 
 	interface ChatCorespondent {
 		avatar: string;
@@ -109,17 +97,6 @@
 		class="btn mb-2 flex items-center justify-center rounded-full"
 		onclick={async (e) => {
 			showChat = true;
-
-			await sleep(10); //this sleep will allow the floating elem to be mounted when isOpen changes. Required for animation to trigger
-
-			const res = await computePosition(
-				e.target as ReferenceElement,
-				floatingElem as FloatingElement,
-				{
-					middleware: [shift(), offset(20), floatinguiflip()]
-				}
-			);
-			floatingStyles = `top: ${res.y}px; left: ${res.x}px;`;
 		}}
 	>
 		Ask Gora
@@ -174,9 +151,7 @@
 
 {#if showChat}
 	<div
-		bind:this={floatingElem}
-		style={floatingStyles}
-		class="bg-base-300 fixed left-0 top-0 z-[100] flex h-[700px] w-[600px] flex-col justify-end rounded-2xl p-3"
+		class="bg-base-300 fixed left-0 top-0 z-[100] m-5 flex min-h-[70vh] w-full max-w-[90vw] flex-col justify-end rounded-2xl p-3 shadow-2xl lg:w-[600px]"
 		transition:fly={{ duration: 300, x: -10, easing: cubicIn }}
 	>
 		<div class="absolute right-0 top-0 z-10">
