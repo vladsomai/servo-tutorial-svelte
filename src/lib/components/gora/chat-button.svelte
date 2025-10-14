@@ -14,7 +14,7 @@
 	const maxCharactersInput = 1000;
 	let charsLeft = $state(maxCharactersInput);
 
-	let showChat = $state(true);
+	let showChat = $state(false);
 	let waitingForGora = $state(false);
 	let chatDiv: HTMLDivElement | null = $state(null);
 
