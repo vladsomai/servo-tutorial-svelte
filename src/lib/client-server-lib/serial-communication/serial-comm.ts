@@ -1,6 +1,6 @@
-import { LogCommand, LogError, LogInfo, LogWarning} from "$lib/components/log-window/state.svelte";
+import { LogCommand, LogError, LogInfo, LogWarning } from "$lib/components/log-window/state.svelte";
 import { GlobalMotorCommandsMap } from "../../../hooks.client";
-import { LogLevelType, type LogCommandType } from "../types";
+import { LogLevelType, type LogCommandType, type StatusErrorCodesType } from "../types";
 import { GetCurrentBrowser, sleep, Uint8ArrayToString } from "../utils";
 import { SerialPortState, SetSerialPort, SetSerialPortQueue, SetSerialPortReader, SetSerialPortWriter } from "./state.svelte";
 
@@ -114,7 +114,8 @@ export class SerialPortActions {
                 IsSendCmd: true,
                 Level: LogLevelType.Command,
                 Log: dataToSendStr,
-                Timestamp: ""
+                Timestamp: "",
+                TroubleshootError: null
             }
 
             LogCommand(logCommand);
@@ -130,9 +131,31 @@ export class SerialPortActions {
                     }
 
                     SerialPortState.SerialPortQueue.clear()
-                    
+
                     const command = GlobalMotorCommandsMap.get(cmdId)
-                    LogWarning(`Command \'${command?.CommandString}\' timed out.`)
+
+                    const errStatus: StatusErrorCodesType = {
+                        "code": 0,
+                        "enum": "COMMAND_TIMEOUT",
+                        "short_desc": "Command timeout",
+                        "long_desc": "The command you sent did not receive a response",
+                        "causes": [
+                            "Motor not powered on",
+                            "Serial cable not connected to the motor",
+                            "Incorrect selected alias / unique id",
+                            "Green LED on the device is not flashing slowly"
+                        ],
+                        "solutions": [
+                            "Connect the motor to a 12-24V power source",
+                            "Serial cable is connected from the motor to the UART adapter and then to your PC",
+                            "Select the alias or unique id identified using \'DETECT_DEVICES\' command",
+                            "Green LED is flashing slowly (motor's firmware is waiting for a command)",
+                            "Reset your device using \'SYSTEM_RESET\' / Command 27 "
+                        ]
+
+                    }
+
+                    LogWarning(`Command \'${command?.CommandString}\' timed out.`, errStatus)
                 }, 2000);
             }
 
@@ -215,7 +238,8 @@ export class SerialPortActions {
                         IsSendCmd: false,
                         Level: LogLevelType.Command,
                         Log: packetStr,
-                        Timestamp: ""
+                        Timestamp: "",
+                        TroubleshootError: null
                     }
 
                     LogCommand(logCommand);

@@ -6,6 +6,7 @@
 	import LabeledSelect from '../labeled-select.svelte';
 	import { GetFuncNameFromCmdString } from '$lib/client-server-lib/utils';
 	import { GlobalConversionTypes } from '../../../hooks.client';
+	import Converter from './converter.svelte';
 
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
 
@@ -50,5 +51,11 @@
 				]);
 			}}>{currentCommand.CommandString}</button
 		>
+
+		
+		<div class="divider"></div>
+
+		<Converter unit={positionUnit} value={position} converter={'Position'} />
+		<Converter unit={timeUnit} value={duration} converter={'Time'} />
 	</div>
 </div>

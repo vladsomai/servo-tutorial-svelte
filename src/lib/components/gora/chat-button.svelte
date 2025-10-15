@@ -53,6 +53,7 @@
 			}
 
 			e.target['gorainput'].value = '';
+			charsLeft = maxCharactersInput
 
 			const outgoingTime = new Date();
 			let outgoing: ChatCorespondent = {

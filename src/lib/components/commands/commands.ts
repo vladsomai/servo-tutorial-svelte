@@ -100,7 +100,7 @@ function PositionToUint8Arr(position: number, positionUnit: string, byteSize: nu
     }
 
     // @ts-ignore
-    const commPos = Math.ceil(conversion_factors[requestedPosUnit] * position)
+    const commPos = Math.round(conversion_factors[requestedPosUnit] * position)
     const posArr = NumberToUint8Arr(commPos, byteSize as ByteSizes)
 
     return posArr
@@ -118,7 +118,7 @@ function AccelerationToUint8Arr(acceleration: number, accelerationUnit: string) 
     }
 
     // @ts-ignore
-    const commAcc = Math.ceil(conversion_factors[requestedAccUnit] * acceleration)
+    const commAcc = Math.round(conversion_factors[requestedAccUnit] * acceleration)
     const accArr = NumberToUint8Arr(commAcc, 4)
 
     return accArr
@@ -135,7 +135,7 @@ function VelocityToUint8Arr(velocity: number, velocityUnit: string) {
     }
 
     // @ts-ignore
-    const commVel = Math.ceil(conversion_factors[requestedVelUnit] * velocity)
+    const commVel = Math.round(conversion_factors[requestedVelUnit] * velocity)
     const veloArr = NumberToUint8Arr(commVel, 4)
 
     return veloArr
@@ -156,7 +156,7 @@ function TimeToUint8Arr(time: number, timeUnit: string) {
     }
 
     // @ts-ignore
-    const commTime = Math.ceil(conversion_factors[requestedTimeUnit] * time)
+    const commTime = Math.round(conversion_factors[requestedTimeUnit] * time)
     const durArr = NumberToUint8Arr(commTime, 4)
 
     return durArr

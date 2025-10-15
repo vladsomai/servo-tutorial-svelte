@@ -6,6 +6,7 @@
 	import LabeledInput from '../labeled-input.svelte';
 	import LabeledSelect from '../labeled-select.svelte';
 	import { M3 } from './commands';
+	import Converter from './converter.svelte';
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
 
 	let position = $state(1);
@@ -49,5 +50,10 @@
 				]);
 			}}>{currentCommand.CommandString}</button
 		>
+
+		<div class="divider"></div>
+
+		<Converter unit={positionUnit} value={position} converter={'Position'} />
+		<Converter unit={timeUnit} value={duration} converter={'Time'} />
 	</div>
 </div>

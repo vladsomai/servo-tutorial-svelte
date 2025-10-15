@@ -6,7 +6,8 @@
 	import LabeledSelect from '../labeled-select.svelte';
 	import { M3 } from './commands';
 	import { GlobalConversionTypes } from '../../../hooks.client';
-	
+	import Converter from './converter.svelte';
+
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
 	let velocity = $state(3);
 	let duration = $state(5);
@@ -48,5 +49,10 @@
 				]);
 			}}>{currentCommand.CommandString}</button
 		>
+
+		<div class="divider"></div>
+
+		<Converter unit={velocityUnit} value={velocity} converter={'Velocity'} />
+		<Converter unit={timeUnit} value={duration} converter={'Time'} />
 	</div>
 </div>

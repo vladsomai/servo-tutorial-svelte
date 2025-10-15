@@ -60,7 +60,7 @@ export const GlobalMotorCommands = initialMotorCommands as MotorCommandType[]
 const [map, grouped] = GetMotorCommands()
 export const GlobalMotorCommandsMap = map as Map<number, MotorCommandType>
 export const GlobalMotorCommandsGrouped = grouped as Map<string, number[]>
-export const GlobalConversionTypes = convTypes
+export const GlobalConversionTypes: any = convTypes
 export const GlobalStatusErrorCodes = GetStatusErrorCodes()
 
 // Create all M3 class functions
