@@ -7,6 +7,7 @@
 	import { GetFuncNameFromCmdString } from '$lib/client-server-lib/utils';
 	import { GlobalConversionTypes } from '../../../hooks.client';
 	import Converter from './converter.svelte';
+	import GoToReferences from '../go-to-references.svelte';
 
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
 
@@ -58,7 +59,7 @@
 		>
 
 		<div class="divider"></div>
-
+		<GoToReferences />
 		<Converter unit={accelerationUnit} value={acceleration} converter={'Acceleration'} />
 		<Converter unit={timeUnit} value={duration} converter={'Time'} />
 	</div>

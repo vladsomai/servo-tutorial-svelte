@@ -7,6 +7,7 @@
 	import { M3 } from './commands';
 	import { GlobalConversionTypes } from '../../../hooks.client';
 	import Converter from './converter.svelte';
+	import GoToReferences from '../go-to-references.svelte';
 
 	let { currentCommand, children }: { currentCommand: MotorCommandType; children: any } = $props();
 	let velocity = $state(3);
@@ -51,7 +52,7 @@
 		>
 
 		<div class="divider"></div>
-
+		<GoToReferences />
 		<Converter unit={velocityUnit} value={velocity} converter={'Velocity'} />
 		<Converter unit={timeUnit} value={duration} converter={'Time'} />
 	</div>

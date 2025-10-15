@@ -3,7 +3,7 @@ import dataTypes from '$lib/client-server-lib/motor-data/data_types.json';
 import convTypes from '$lib/client-server-lib/motor-data/unit_conversions_M3.json';
 import initialMotorCommands from '$lib/client-server-lib/motor-data/motor_commands.json';
 import errorCodes from '$lib/client-server-lib/motor-data/status_error_codes.json';
-import { CommandsProtocolChapter, QuickStartChapter, type MotorCommandType, type MotorDataType, type StatusErrorCodesType } from "$lib/client-server-lib/types";
+import { CommandsProtocolChapter, QuickStartChapter, ReferencesChapter, type MotorCommandType, type MotorDataType, type StatusErrorCodesType } from "$lib/client-server-lib/types";
 import { GetFuncNameFromCmdString } from "$lib/client-server-lib/utils";
 import { M3 } from "$lib/components/commands/commands";
 import { ExecuteGenericCommand } from "$lib/components/commands/commands"
@@ -38,7 +38,7 @@ function GetDataTypes() {
 }
 
 function GetMotorCommands() {
-    const motorCommands: MotorCommandType[] = [QuickStartChapter, CommandsProtocolChapter, ...initialMotorCommands as MotorCommandType[]]
+    const motorCommands: MotorCommandType[] = [QuickStartChapter, CommandsProtocolChapter, ReferencesChapter, ...initialMotorCommands as MotorCommandType[]]
 
     const motorCommandsMap = new Map<number, MotorCommandType>()
     const commandsGrouped = new Map<string, number[]>()

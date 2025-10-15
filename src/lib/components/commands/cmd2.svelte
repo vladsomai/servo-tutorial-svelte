@@ -3,6 +3,7 @@
 	import { GetFuncNameFromCmdString } from '$lib/client-server-lib/utils';
 	import { SelectedAxis, SelectedUniqueID } from '$lib/stores/global';
 	import { GlobalConversionTypes } from '../../../hooks.client';
+	import GoToReferences from '../go-to-references.svelte';
 	import LabeledInput from '../labeled-input.svelte';
 	import LabeledSelect from '../labeled-select.svelte';
 	import { M3 } from './commands';
@@ -52,7 +53,7 @@
 		>
 
 		<div class="divider"></div>
-
+		<GoToReferences />
 		<Converter unit={positionUnit} value={position} converter={'Position'} />
 		<Converter unit={timeUnit} value={duration} converter={'Time'} />
 	</div>

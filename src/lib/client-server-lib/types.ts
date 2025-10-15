@@ -54,6 +54,15 @@ export const QuickStartChapter: MotorCommandType = {
     Output: null
 }
 
+export const ReferencesChapter: MotorCommandType = {
+    CommandString: "References",
+    CommandEnum: 1003,
+    CommandGroup: "Get started",
+    Description: "",
+    Input: null,
+    Output: null
+}
+
 export interface DetectedDeviceType {
     UniqueID: string
     Alias: number
