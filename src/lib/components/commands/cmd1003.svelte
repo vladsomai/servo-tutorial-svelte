@@ -21,7 +21,9 @@
 		<article class="prose prose-slate max-w-full">
 			<ul>
 				{#each GlobalDataTypes as [key, value]}
-					<li><p>{key} - byte size: {value.ByteSize}</p></li>
+					<li>
+						<p>{key} - byte size: {value.ByteSize == null ? 'Not applicable' : value.ByteSize}</p>
+					</li>
 				{/each}
 			</ul>
 		</article>
